@@ -106,7 +106,6 @@ voting.history <- url %>%
   read_html() %>%
   html_nodes(xpath='//table[@id="data"]') %>%
   html_table(fill=T)
-# write.csv(voting.history,"us.election.wisc.history.csv")
 
 df.elections = data.frame(1:44)
 df.elections$year = unlist(lapply(voting.history, '[[', 'X3'))
@@ -186,7 +185,6 @@ df.elections$mean.dem.poll.oneweek.divergence = NA
 
 # Gathering poll data scraping instructions from here: https://pkremp.github.io/report.html
 # rm(list = ls())
-
 library(rstan)
 library(dplyr)
 library(tidyr)
@@ -196,8 +194,6 @@ library(lubridate)
 library(curl)
 library(shinystan)
 library(rmarkdown)
-
-setwd("C:\\Users\\s_cas\\Documents\\GitHub\\polls")
 
 # Useful functions #
 corr_matrix <- function(m) {
@@ -250,10 +246,6 @@ start_date_2016 <-
 
 # Download the data and put everything in a single df
 all_polls_2016 <- map_df(stubs_2016, download_csv, .id = "state")
-write.csv(all_polls_2016, "all_polls_2016.csv")
-
-# all_polls_2016 = read.csv("all_polls_2016.csv", stringsAsFactors = FALSE, header = TRUE)
-
 colnames(all_polls_2016) <- colnames(all_polls_2016) %>% tolower
 
 # I'm only interested in the overall likely voters, not partisan voters
@@ -313,8 +305,6 @@ polls.wisc.point.2016.defs = ggplot(selected_polls_2016.sub, aes(x = start.date,
   geom_jitter(colour = "red") + geom_jitter(aes(y = selected_polls_2016.sub$clinton.defs), colour = "blue") +
   geom_jitter(aes(y = selected_polls_2016.sub$other.defs), colour = "grey")
 polls.wisc.point.2016.defs
-
-write.csv(all_polls_2016, "all_polls_2016.csv")
 } # Getting the 2016 poll data
 { ## Getting 2012 poll data
 stubs_2012 <- c(
@@ -329,9 +319,6 @@ start_date_2012 <-
 
 # Download the data and put everything in a single df
 all_polls_2012 <- map_df(stubs_2012, download_csv, .id = "state")
-
-# all_polls_2012 = read.csv("all_polls_2012.csv", stringsAsFactors = FALSE, header = TRUE)
-
 colnames(all_polls_2012) <- colnames(all_polls_2012) %>% tolower
 
 # I'm only interested in the overall likely voters, not partisan voters
@@ -387,7 +374,6 @@ geom_jitter(aes(y = selected_polls_2012.sub$other), colour = "grey") +
   geom_jitter(aes(y = selected_polls_2012.sub$und), colour = "orange") +
   scale_y_continuous(limits = c(0,55))
 polls.wisc.point.2012
-write.csv(all_polls_2012, "all_polls_2012.csv")
 } # Getting the 2012 poll data
 
 
@@ -414,9 +400,6 @@ df.elections.2016.grouped$diff.from.poll = df.elections.2016.grouped$votes.perc 
 df.elections.2016.grouped$diff.from.poll.defs = df.elections.2016.grouped$votes.perc - df.elections.2016.grouped$polls.nov.def
 
 # Loading historic county data 2016 to 2000 ----------------------------------------
-setwd(
-  "C:\\Users\\s_cas\\Dropbox\\Perso\\2016 voting election county results\\Wisconsin\\Historical elections"
-)
 # http://elections.wi.gov/elections-voting/results/2000/fall-general
 # http://elections.wi.gov/elections-voting/results/2004/fall-general
 # http://elections.wi.gov/elections-voting/results/2008/fall-general
@@ -445,9 +428,8 @@ county.summary.df$turnout.all = sum(county.summary.df$turnout)
 
 ## NOTE: Here http://www.wisconsinvote.org/faq it says you can register on the day to vote,
 ## so maybe this registered to vote value is not accurate?
-setwd("C:\\Users\\s_cas\\Dropbox\\Perso\\2016 voting election county results\\Wisconsin")
 registered.voters = read.xlsx(
-  "registeredvotersbycounty_xlsx_45404MOD.xlsx",
+  "Wisconsin election stats\\registeredvotersbycounty_xlsx_45404MOD.xlsx",
   sheetIndex = 1,
   stringsAsFactors = F,
   header = T
@@ -475,7 +457,7 @@ county.summary.df$turnout.state.reg = (sum(county.summary.df$turnout) / sum(coun
 # df.elections$turnout.overall = sum(df.elections$votes.rec / df.elections$voting.age.pop)
 
 voting.age.people = read.xlsx(
-  "2012_presidential_general_election_turnout_xlsx_11916.xlsx",
+  "Wisconsin election stats\\2012_presidential_general_election_turnout_xlsx_11916.xlsx",
   sheetIndex = 2,
   stringsAsFactors = F,
   header = T
@@ -537,16 +519,12 @@ county.summary.2016.final$county = as.character(county.summary.2016.final$county
 
 } # 2016 data
 { # 2012 data
-
-  setwd(
-    "C:\\Users\\s_cas\\Dropbox\\Perso\\2016 voting election county results\\Wisconsin\\Historical elections"
-  )
   county.summary.df = county.summary.df[order(county.summary.df$county), ]
 
     # This data comes from here: http://elections.wi.gov/elections-voting/results/2012/fall-general
   # 2012 county data
   results.2012 = read.xlsx(
-    file = "County by County_11.6.12MOD.xls",
+    file = "Historical elections\\County by County_11.6.12MOD.xls",
     sheetIndex = 2,
     header = TRUE,
     colClasses = NA,
@@ -638,11 +616,8 @@ county.summary.2016.final$county = as.character(county.summary.2016.final$county
 
   # rbind(county.summary.2012.final,county.summary.2012.final)
 } # 2012 county data frame
-setwd(
-  "C:\\Users\\s_cas\\Dropbox\\Perso\\2016 voting election county results\\Wisconsin\\Historical elections"
-)
 { # 2008 county data frame
-  election.2008 = read.csv("2008_FallElection_President_WardbyWardMOD.csv",
+  election.2008 = read.csv("Historical elections\\2008_FallElection_President_WardbyWardMOD.csv",
                            stringsAsFactors = F)
 
   election.2008.final.group = group_by(election.2008, COUNTY)
@@ -698,7 +673,7 @@ setwd(
   election.2008.final$swing.turnout.perc = NA
 } # 2008 data frame
 { # 2004 county data frame
-  election.2004 = read.csv("2004_FallElection_President_WardbyWardMOD.csv",stringsAsFactors = F)
+  election.2004 = read.csv("Historical elections\\2004_FallElection_President_WardbyWardMOD.csv",stringsAsFactors = F)
   election.2004$COUNTY.1 = as.character(election.2004$COUNTY.1)
 
   election.2004.final.group = group_by(election.2004, COUNTY.1)
@@ -754,7 +729,7 @@ setwd(
   election.2004.final$swing.turnout.perc = NA
 } # 2004 data frame
 { # 2000 county data frame
-  election.2000 = read.csv("2000001107_PRES_SORTMOD.csv", stringsAsFactors = F)
+  election.2000 = read.csv("Historical elections\\2000001107_PRES_SORTMOD.csv", stringsAsFactors = F)
 
   election.2000.final.group = group_by(election.2000, COUNTY)
   election.2000.final = dplyr::summarise(
@@ -826,10 +801,8 @@ historical.counties = rbind(county.summary.2016.final,county.summary.2012.final,
 # Loading voting machine data ---------------------------------------------
 # This file from here: http://elections.wi.gov/elections-voting/voting-equipment/voting-equipment-use
 # Voting machine equipment for 13 September 2016
-setwd("C:\\Users\\s_cas\\Dropbox\\Perso\\2016 voting election county results\\Wisconsin")
-
 vot.equip = read.xlsx(
-  "voting_equipment_by_municipality_09_2016_xlsx_78114.xlsx1207162619.xlsx",
+  "Wisconsin election stats\\voting_equipment_by_municipality_09_2016_xlsx_78114.xlsx1207162619.xlsx",
   sheetIndex = 1,
   header = TRUE,
   colClasses = NA,
