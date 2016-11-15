@@ -15,7 +15,6 @@ substrRight <- function(x, n){
   substr(x, nchar(x)-n+1, nchar(x))
 }
 
-
 # Loading 2016 results ----------------------------------------------------
 # Loading in 2016 results
 # Following guide here:
@@ -466,58 +465,20 @@ write.csv(all_polls_2012, "all_polls_2012.csv")
 } # Getting the 2012 poll data
 
 
-# Comparing 2016 candidate results overall -------------------------------------
+# Merging polls with existing data ----------------------------------------
+
 # Overall results vs polls
 df.elections.summary.2016 = subset(df.elections, year == 2016)
 
 df.elections.2016.group = group_by(voting.df.2016, cand.group)
 df.elections.2016.grouped = dplyr::summarise(df.elections.2016.group,
-                                   votes.rec = sum(votes.rec))
+                                             votes.rec = sum(votes.rec))
 
 df.elections.2016.grouped$votes.perc = (df.elections.2016.grouped$votes.rec / sum(df.elections.2016.grouped$votes.rec)) * 100
 
 df.elections.2016.grouped$ordered.cands= c(2,3,1)
 df.elections.2016.grouped = df.elections.2016.grouped[order(df.elections.2016.grouped$ordered.cands), ]
 
-df.elections.2016.grouped.vis.defs = ggplot(df.elections.2016.grouped,
-                                       aes(x = ordered.cands, y = votes.perc, fill = cand.group,group =1)) +
-  geom_bar(stat = "identity") +
-  geom_line(stat = "identity",
-            aes(y = df.elections.summary.2016$mean.dem.poll.oneweek.defs),
-            colour = "blue", linetype = 3,
-            show.legend = F) +
-  geom_line(stat = "identity",
-            aes(y = df.elections.summary.2016$mean.rep.poll.oneweek.defs),
-            colour = "red", linetype = 3, size = 1,
-            show.legend = F) +
-  geom_line(stat = "identity",
-            aes(y = df.elections.summary.2016$mean.oth.poll.oneweek.defs),
-            colour = "black", linetype = 3,
-            show.legend = F) +
-  geom_line(stat = "identity",
-            aes(y = df.elections.summary.2016$mean.dem.poll.oneweek),
-            colour = "blue",
-            show.legend = F) +
-  geom_line(stat = "identity",
-            aes(y = df.elections.summary.2016$mean.rep.poll.oneweek),
-            colour = "red", size = 1,
-            show.legend = F) +
-  geom_line(stat = "identity",
-            aes(y = df.elections.summary.2016$mean.oth.poll.oneweek),
-            colour = "black",
-            show.legend = F) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        legend.position = "none") +
-  scale_x_discrete(
-    limit =  df.elections.2016.grouped$ordered.cands,
-    labels = as.character(df.elections.2016.grouped$cand.group),
-    name = NULL) +
-  scale_fill_manual(values = c(
-    "light blue",
-    "grey",
-    "lightcoral"
-  ))
-df.elections.2016.grouped.vis.defs
 
 ## Comparing the definite poll voters with the final result
 df.elections.2016.grouped$polls.nov = with(df.elections.summary.2016, c(mean.rep.poll.oneweek, mean.dem.poll.oneweek, mean.oth.poll.oneweek))
@@ -525,31 +486,6 @@ df.elections.2016.grouped$polls.nov.def = with(df.elections.summary.2016, c(mean
 
 df.elections.2016.grouped$diff.from.poll = df.elections.2016.grouped$votes.perc - df.elections.2016.grouped$polls.nov
 df.elections.2016.grouped$diff.from.poll.defs = df.elections.2016.grouped$votes.perc - df.elections.2016.grouped$polls.nov.def
-
-# The undecideds went to Trump
-poll.res.compare.vis = ggplot(df.elections.2016.grouped, aes(x = cand.group, y = diff.from.poll.defs, fill = cand.group, group = 1)) +
-  # geom_line(stat = "identity",show.legend = F, aes(y = df.elections.summary.2016$polls.nov)) +
-  geom_bar(stat = "identity", show.legend = F) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-   scale_x_discrete(
-     limit =  df.elections.2016.grouped$cand.group,
-     labels = as.character(df.elections.2016.grouped$cand.group),
-     name = NULL) +
-  scale_fill_manual(values = c(
-    "light blue",
-    "grey",
-    "lightcoral"))
-poll.res.compare.vis
-
-compare.2016.results.with.polls.plotnames = c("df.elections.2016.grouped.vis.defs",
-                                              "poll.res.compare.vis")
-compare.2016.results.with.polls = marrangeGrob(
-  grobs = mget(compare.2016.results.with.polls.plotnames),
-  nrow = 1,
-  ncol = 2,
-  top = NULL
-)
-compare.2016.results.with.polls
 
 # Loading historic county data 2016 to 2000 ----------------------------------------
 setwd(
@@ -1025,6 +961,75 @@ vot.equip.county = join(vot.equip.county,
                         vot.equip.county.machines,
                         by = "county",
                         match = "first")
+
+
+# Comparing 2016 candidate results overall -------------------------------------
+
+df.elections.2016.grouped.vis.defs = ggplot(df.elections.2016.grouped,
+                                            aes(x = ordered.cands, y = votes.perc, fill = cand.group,group =1)) +
+  geom_bar(stat = "identity") +
+  geom_line(stat = "identity",
+            aes(y = df.elections.summary.2016$mean.dem.poll.oneweek.defs),
+            colour = "blue", linetype = 3,
+            show.legend = F) +
+  geom_line(stat = "identity",
+            aes(y = df.elections.summary.2016$mean.rep.poll.oneweek.defs),
+            colour = "red", linetype = 3, size = 1,
+            show.legend = F) +
+  geom_line(stat = "identity",
+            aes(y = df.elections.summary.2016$mean.oth.poll.oneweek.defs),
+            colour = "black", linetype = 3,
+            show.legend = F) +
+  geom_line(stat = "identity",
+            aes(y = df.elections.summary.2016$mean.dem.poll.oneweek),
+            colour = "blue",
+            show.legend = F) +
+  geom_line(stat = "identity",
+            aes(y = df.elections.summary.2016$mean.rep.poll.oneweek),
+            colour = "red", size = 1,
+            show.legend = F) +
+  geom_line(stat = "identity",
+            aes(y = df.elections.summary.2016$mean.oth.poll.oneweek),
+            colour = "black",
+            show.legend = F) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none") +
+  scale_x_discrete(
+    limit =  df.elections.2016.grouped$ordered.cands,
+    labels = as.character(df.elections.2016.grouped$cand.group),
+    name = NULL) +
+  scale_fill_manual(values = c(
+    "light blue",
+    "grey",
+    "lightcoral"
+  ))
+df.elections.2016.grouped.vis.defs
+
+
+# The undecideds went to Trump
+poll.res.compare.vis = ggplot(df.elections.2016.grouped, aes(x = cand.group, y = diff.from.poll.defs, fill = cand.group, group = 1)) +
+  # geom_line(stat = "identity",show.legend = F, aes(y = df.elections.summary.2016$polls.nov)) +
+  geom_bar(stat = "identity", show.legend = F) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_x_discrete(
+    limit =  df.elections.2016.grouped$cand.group,
+    labels = as.character(df.elections.2016.grouped$cand.group),
+    name = NULL) +
+  scale_fill_manual(values = c(
+    "light blue",
+    "grey",
+    "lightcoral"))
+poll.res.compare.vis
+
+compare.2016.results.with.polls.plotnames = c("df.elections.2016.grouped.vis.defs",
+                                              "poll.res.compare.vis")
+compare.2016.results.with.polls = marrangeGrob(
+  grobs = mget(compare.2016.results.with.polls.plotnames),
+  nrow = 1,
+  ncol = 2,
+  top = NULL
+)
+compare.2016.results.with.polls
 
 # Comparing by county 2016 -------------------------------------------------------------
 ## VISUALISING THE 2016 RESULTS
