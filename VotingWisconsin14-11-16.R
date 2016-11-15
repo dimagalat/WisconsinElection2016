@@ -147,10 +147,9 @@ df.elections$vote.num.diff = df.elections$rep.vote - df.elections$dem.vote
 df.elections$winner = with(df.elections, ifelse(vote.perc.diff < 0, "Dem", "Rep"))
 
 ## File reference not working?
-setwd("C:\\Users\\s_cas\\Dropbox\\Perso\\2016 voting election county results\\Wisconsin")
 # From here: https://www.google.es/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0ahUKEwjChuux5qfQAhWCrxoKHXcKDqYQFggdMAA&url=http%3A%2F%2Felections.wi.gov%2Fsites%2Fdefault%2Ffiles%2Fpage%2Fvoter_turnout_partisan_nonpartisan_xlsx_13632.xlsx&usg=AFQjCNHNxn4e1xNCCjaLXekHxuAKT_dFxg
 historical.turnout = read.xlsx(
-  file = "\\Wisconsin election stats\\voter_turnout_partisan_nonpartisan_xlsx_13632.xlsx",
+  file = "Wisconsin election stats\\voter_turnout_partisan_nonpartisan_xlsx_13632.xlsx",
   sheetIndex = 1,
   header = TRUE,
   colClasses = NA,
