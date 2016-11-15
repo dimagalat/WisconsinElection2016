@@ -789,14 +789,34 @@ county.summary.2016.final$county = as.character(county.summary.2016.final$county
   election.2000.final$oth.change = NA
 } # 2000 data frame
 
-colnames(election.2008.final) %in% colnames(election.2004.final)
-
-test = rbind(county.summary.2016.final,county.summary.2012.final, election.2008.final)
-
-test = rbind(election.2004.final,election.2000.final)
-
+# Making final length data frame
 historical.counties = rbind(county.summary.2016.final,county.summary.2012.final,
                             election.2008.final,election.2004.final,election.2000.final)
+historical.counties$county = factor(historical.counties$county)
+
+# Adding extra columns
+county.winners = as.data.frame(table(historical.counties$county[historical.counties$winning.party == "Dem"]))
+county.winners = c("county","dem.wins")
+
+historical.counties = join(historical.counties, county.winners, by = "county")
+historical.counties$mostly.dem = with(historical.counties, ifelse(dem.wins >= 3, "Mostly Dem",
+                                                                  "Mostly Rep"))
+historical.counties$dem.2016 = with(historical.counties, ifelse(year == 2016 &
+                                                                  winning.party == "Dem",
+                                                                "Dem2016", "Rep2016"))
+low.turnout.quant = quantile(historical.counties$swing.turnout.perc[historical.counties$year == 2016])[2]
+low.turnout.quant = unname(low.turnout.quant)
+
+historical.counties$most.turnout.drop = with(historical.counties, ifelse(swing.turnout.perc < low.turnout.quant,
+                                                                         "Large turnout change 2016", "Little turnout change 2016"))
+
+historical.counties.2016 = historical.counties
+historical.counties.2016 = subset(historical.counties.2016, !is.na(most.turnout.drop))
+
+historical.counties.quant.join = data.frame(historical.counties.2016$county,historical.counties.2016$most.turnout.drop)
+colnames(historical.counties.quant.join) = c("county","most.turnout.drop")
+
+historical.counties = join(historical.counties, historical.counties.quant.join, by = "county")
 
 # Loading voting machine data ---------------------------------------------
 # This file from here: http://elections.wi.gov/elections-voting/voting-equipment/voting-equipment-use
@@ -861,10 +881,49 @@ vot.equip.county = join(vot.equip.county,
                         by = "county",
                         match = "first")
 
+machine.join = data.frame(county.summary.2016.final$county, county.summary.2016.final$use.machines.prop, county.summary.2016.final$machine.most.used)
+colnames(machine.join) = c("county","use.machines.prop","machine.most.used")
 
+str(machine.join$use.machines.prop)
+
+machine.join$all.machines = with(machine.join, ifelse(use.machines.prop > 0.75, "Mostly voting machines",
+                                                      "Some or no voting machines"))
+
+historical.counties = join(historical.counties,machine.join,by="county")
+
+county.summary.2016.final = county.summary.2016.final[order(county.summary.2016.final$county), ]
+county.summary.2016.final$use.machines.prop = vot.equip.county$use.machines.prop
+county.summary.2016.final$machine.most.used = vot.equip.county$machine.most.used
+
+rm(vote.equip.county.machines,vote.equip.county.grouped,voting.age.people,test,
+   machine.join, historical.turnout.join,a,)
+
+# Write final csvs --------------------------------------------------------
+write.csv(county.summary.df,"county.summary.df.csv")
+write.csv(historical.counties,"historical.counties.csv")
+write.csv(all_polls_2012,"all_polls_2012.csv")
+write.csv(all_polls_2016,"all_polls_2016.csv")
+write.csv(selected_polls_2012.sub,"selected_polls_2012.sub.csv")
+write.csv(selected_polls_2016.sub,"selected_polls_2016.sub.csv")
+write.csv(df.elections,"df.elections.csv")
+
+
+# Read in csvs and subset for use ------------------------------------------------------------
+setwd("C:\\Users\\s_cas\\Dropbox\\Perso\\2016 voting election county results\\Wisconsin")
+
+county.summary.df = read.csv("county.summary.df.csv")
+historical.counties = read.csv("historical.counties.csv")
+all_polls_2012 = read.csv("all_polls_2012.csv")
+all_polls_2016 = read.csv("all_polls_2016.csv")
+selected_polls_2012.sub = read.csv("selected_polls_2012.sub.csv")
+selected_polls_2016.sub = read.csv("selected_polls_2016.sub.csv")
+df.elections = read.csv("df.elections.csv")
 
 # Overview of historical elections 1900 onwards ---------------------------
-historical.election.data = ggplot(df.elections.postwar,
+df.elections.summary.2016 = subset(df.elections, year == 2016)
+df.elections.postwar = subset(df.elections, year >= 1948)
+
+historical.election.data.swing = ggplot(df.elections.postwar,
                                   aes(
                                     x = year,
                                     y = swing.vote.perc,
@@ -873,15 +932,14 @@ historical.election.data = ggplot(df.elections.postwar,
                                   )) +
   geom_bar(stat = "identity") +
   geom_line(
-    aes(y = df.elections.postwar$swing.turnout.perc * 100),
+    aes(y = df.elections.postwar$swing.turnout.perc),
     alpha = 0.5,
     stat = "identity",
     colour = "black"
   ) +
   scale_y_continuous(
     name = paste(
-      "Swing vote percentage from previous election with time.\n
-      Line indicates change in % turnout compared with previous election.",
+      "Swing vote percentage from previous election with time.\nLine indicates change in % turnout compared with previous election.",
       sep = "",
       collapse = "\n"
     )
@@ -906,8 +964,53 @@ historical.election.data = ggplot(df.elections.postwar,
   # scale_x_discrete(limit =  df.elections$ordered.county.2016.trump,
   #                  labels = as.character(df.elections$county), name = NULL) +
   scale_fill_manual(values = c("light blue", "lightcoral"))
-historical.election.data
+historical.election.data.swing
 
+# Change in Dem votes compared to last election with turnout swing line
+historical.election.data.dem.votes = ggplot(df.elections.postwar,
+                                  aes(
+                                    x = year,
+                                    y = dem.vote.perc,
+                                    fill = winner,
+                                    group = 1
+                                  )) +
+  geom_bar(stat = "identity") +
+  geom_line(
+    aes(y = df.elections.postwar$swing.turnout.perc),
+    alpha = 0.5,
+    stat = "identity",
+    colour = "black"
+  ) +
+  scale_y_continuous(
+    name = paste(
+      "Swing vote percentage from previous election with time.\nLine indicates change in % turnout compared with previous election.",
+      sep = "",
+      collapse = "\n"
+    )
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  annotate(
+    "text",
+    x = mean(df.elections.postwar$year),
+    y = min(df.elections.postwar$swing.vote.perc),
+    label = "Vote swing towards Democrats",
+    vjust = 1,
+    hjust = 0.5
+  ) +
+  annotate(
+    "text",
+    x = mean(df.elections.postwar$year),
+    y = max(df.elections.postwar$swing.vote.perc),
+    label = "Vote swing towards Republicans",
+    vjust = 1,
+    hjust = 0.5
+  ) +
+  # scale_x_discrete(limit =  df.elections$ordered.county.2016.trump,
+  #                  labels = as.character(df.elections$county), name = NULL) +
+  scale_fill_manual(values = c("light blue", "lightcoral"))
+historical.election.data.dem.votes
+
+# Looking at the swing of 'others' with time
 historical.election.data.others = ggplot(df.elections.postwar,
                                          aes(
                                            x = year,
@@ -917,15 +1020,14 @@ historical.election.data.others = ggplot(df.elections.postwar,
                                          )) +
   geom_bar(stat = "identity") +
   geom_line(
-    aes(y = df.elections.postwar$swing.turnout.perc * 100),
+    aes(y = df.elections.postwar$swing.turnout.perc),
     alpha = 0.5,
     stat = "identity",
     colour = "black"
   ) +
   scale_y_continuous(
     name = paste(
-      "Change in other party votes, previous election with time.\n
-      Line indicates change in % turnout compared with previous election.",
+      "Change in other party votes (%) since previous election with time.\nLine indicates change in % turnout compared with previous election.",
       sep = "",
       collapse = "\n"
     )
@@ -1301,32 +1403,6 @@ swing.turnout.2016.2012.compare
 }
 
 # Looking at County data through time -------------------------------------
-
-historical.counties$county = factor(historical.counties$county)
-
-county.winners = as.data.frame(table(historical.counties$county[historical.counties$winning.party == "Dem"]))
-county.winners = c("county","dem.wins")
-
-historical.counties = join(historical.counties, county.winners, by = "county")
-historical.counties$mostly.dem = with(historical.counties, ifelse(dem.wins >= 3, "Mostly Dem",
-                                                                  "Mostly Rep"))
-historical.counties$dem.2016 = with(historical.counties, ifelse(year == 2016 &
-                                                                  winning.party == "Dem",
-                                                                "Dem2016", "Rep2016"))
-low.turnout.quant = quantile(historical.counties$swing.turnout.perc[historical.counties$year == 2016])[2]
-low.turnout.quant = unname(low.turnout.quant)
-
-historical.counties$most.turnout.drop = with(historical.counties, ifelse(swing.turnout.perc < low.turnout.quant,
-                                                                              "Large turnout change 2016", "Little turnout change 2016"))
-
-historical.counties.2016 = historical.counties
-historical.counties.2016 = subset(historical.counties.2016, !is.na(most.turnout.drop))
-
-historical.counties.quant.join = data.frame(historical.counties.2016$county,historical.counties.2016$most.turnout.drop)
-colnames(historical.counties.quant.join) = c("county","most.turnout.drop")
-
-historical.counties = join(historical.counties, historical.counties.quant.join, by = "county")
-
 historical.counties = historical.counties[order(historical.counties$turnout), ]
 historical.counties$ordered.turnout = c(1:length(historical.counties$year))
 
@@ -1485,9 +1561,6 @@ historical.oth.vote.perc.graph
 # Voting machines in counties ---------------------------------------------
 # NOW, GRAPHING SWING BY PROPORTION OF ELECTRONIC VOTING MACHINES IN COUNTY
 # Make sure to reorder before adding in new data!
-county.summary.2016.final = county.summary.2016.final[order(county.summary.2016.final$county), ]
-county.summary.2016.final$use.machines.prop = vot.equip.county$use.machines.prop
-county.summary.2016.final$machine.most.used = vot.equip.county$machine.most.used
 
 # Now, let's order the counties by proportion of municipalities using voting machines
 county.summary.2016.final = county.summary.2016.final[order(county.summary.2016.final$use.machines.prop), ]
@@ -1512,22 +1585,9 @@ correlation(county.summary.2016.final$turnout.perc,
             county.summary.2016.final$use.machines.prop)
 # cor 0.3324792 : not highly correlated
 
-machine.join = data.frame(county.summary.2016.final$county, county.summary.2016.final$use.machines.prop, county.summary.2016.final$machine.most.used)
-colnames(machine.join) = c("county","use.machines.prop","machine.most.used")
-
-str(machine.join$use.machines.prop)
-
-machine.join$all.machines = with(machine.join, ifelse(use.machines.prop > 0.75, "Mostly voting machines",
-                                                      "Some or no voting machines"))
-
-historical.counties = join(historical.counties,machine.join,by="county")
-
-historical.counties$machine.most.used = NULL
-
 # absolute.2016.2012.compare.plotnames = c("county.2012v2016.perc.diff.2016ord","county.differences.years.num")
 # absolute.2016.2012.compare = marrangeGrob(grobs = mget(absolute.2016.2012.compare.plotnames), nrow=2, ncol=1,top=NULL)
 # absolute.2016.2012.compare
-
 
 # Repeating graphs for counties with 100% machines -----------------------------
 
