@@ -908,7 +908,14 @@ write.csv(selected_polls_2016.sub,"selected_polls_2016.sub.csv")
 write.csv(df.elections,"df.elections.csv")
 
 
+
+
 # Read in csvs and subset for use ------------------------------------------------------------
+require(ggplot2)
+require("devtools")  # so we can install from GitHub
+devtools::install_github("ropensci/plotly")  # plotly is part of rOpenSci
+library(plotly)
+
 setwd("C:\\Users\\s_cas\\Dropbox\\Perso\\2016 voting election county results\\Wisconsin")
 
 county.summary.df = read.csv("county.summary.df.csv")
@@ -961,10 +968,10 @@ historical.election.data.swing = ggplot(df.elections.postwar,
     vjust = 1,
     hjust = 0.5
   ) +
-  # scale_x_discrete(limit =  df.elections$ordered.county.2016.trump,
-  #                  labels = as.character(df.elections$county), name = NULL) +
   scale_fill_manual(values = c("light blue", "lightcoral"))
 historical.election.data.swing
+
+## The swing is within historical limits, but perhaps the bigger story is the 'other' vote
 
 # Change in Dem votes compared to last election with turnout swing line
 historical.election.data.dem.votes = ggplot(df.elections.postwar,
@@ -972,71 +979,62 @@ historical.election.data.dem.votes = ggplot(df.elections.postwar,
                                     x = year,
                                     y = dem.vote.perc,
                                     fill = winner,
-                                    group = 1
+                                    group = 1,
                                   )) +
   geom_bar(stat = "identity") +
   geom_line(
-    aes(y = df.elections.postwar$swing.turnout.perc),
+    aes(y = df.elections.postwar$turnout.perc),
     alpha = 0.5,
     stat = "identity",
     colour = "black"
   ) +
+  geom_bar(stat = "identity",fill = "grey", show.legend = FALSE,
+           aes(y = oth.vote.perc)
+           ) +
   scale_y_continuous(
     name = paste(
-      "Swing vote percentage from previous election with time.\nLine indicates change in % turnout compared with previous election.",
+      "Democrat votes with time (%).Line indicates % turnout.",
       sep = "",
       collapse = "\n"
     )
   ) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  annotate(
-    "text",
-    x = mean(df.elections.postwar$year),
-    y = min(df.elections.postwar$swing.vote.perc),
-    label = "Vote swing towards Democrats",
-    vjust = 1,
-    hjust = 0.5
-  ) +
-  annotate(
-    "text",
-    x = mean(df.elections.postwar$year),
-    y = max(df.elections.postwar$swing.vote.perc),
-    label = "Vote swing towards Republicans",
-    vjust = 1,
-    hjust = 0.5
-  ) +
-  # scale_x_discrete(limit =  df.elections$ordered.county.2016.trump,
-  #                  labels = as.character(df.elections$county), name = NULL) +
+  scale_x_continuous(breaks = seq(1948,2016,4)) +
   scale_fill_manual(values = c("light blue", "lightcoral"))
 historical.election.data.dem.votes
 
-# Looking at the swing of 'others' with time
-historical.election.data.others = ggplot(df.elections.postwar,
-                                         aes(
-                                           x = year,
-                                           y = swing.vote.tot.oth.change.perc,
-                                           fill = winner,
-                                           group = 1
-                                         )) +
+
+
+# Overall voter numbers
+historical.election.data.dem.votes.num = ggplot(df.elections.postwar,
+                                            aes(
+                                              x = year,
+                                              y = dem.vote,
+                                              fill = winner,
+                                              group = 1
+                                            )) +
   geom_bar(stat = "identity") +
   geom_line(
-    aes(y = df.elections.postwar$swing.turnout.perc),
+    aes(y = df.elections.postwar$turnout),
     alpha = 0.5,
     stat = "identity",
     colour = "black"
   ) +
+  geom_bar(stat = "identity",fill = "grey", show.legend = FALSE,
+           aes(y = oth.vote)
+  ) +
   scale_y_continuous(
     name = paste(
-      "Change in other party votes (%) since previous election with time.\nLine indicates change in % turnout compared with previous election.",
+      "Democrat votes with time (no. of voters). Line indicates % turnout.",
       sep = "",
       collapse = "\n"
     )
   ) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  # scale_x_discrete(limit =  df.elections$ordered.county.2016.trump,
-  #                  labels = as.character(df.elections$county), name = NULL) +
+  scale_x_continuous(breaks = seq(1948,2016,4)) +
   scale_fill_manual(values = c("light blue", "lightcoral"))
-historical.election.data.others
+historical.election.data.dem.votes.num
+
 
 # Comparing 2016 candidate results overall -------------------------------------
 

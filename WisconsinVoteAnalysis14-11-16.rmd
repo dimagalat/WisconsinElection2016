@@ -8,24 +8,58 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
+Information on how to use Plotly can be found here: https://www.r-bloggers.com/plot-with-ggplot2-and-plotly-within-knitr-reports/
+```{r setupeverything, echo = FALSE}
 library(plotly)
-summary(cars)
+py <- plot_ly(username="SeanCase", key="••••••••••")
+
+setwd("C:\\Users\\s_cas\\Dropbox\\Perso\\2016 voting election county results\\Wisconsin")
+
+county.summary.df = read.csv("county.summary.df.csv")
+historical.counties = read.csv("historical.counties.csv")
+all_polls_2012 = read.csv("all_polls_2012.csv")
+all_polls_2016 = read.csv("all_polls_2016.csv")
+selected_polls_2012.sub = read.csv("selected_polls_2012.sub.csv")
+selected_polls_2016.sub = read.csv("selected_polls_2016.sub.csv")
+df.elections = read.csv("df.elections.csv")
+
+df.elections.summary.2016 = subset(df.elections, year == 2016)
+df.elections.postwar = subset(df.elections, year >= 1948)
+
+default.margin = list(l = 100, r = 80, b = 80, t = 20, pad = 4)
 ```
 
 ## Including Plots
 
-You can also embed plots, for example:
+Test plot embed
 
 ```{r pressure, echo=FALSE}
-plot(historical.election.data.dem.votes)
+
+# Overall voter numbers
+historical.election.data.dem.votes.num = ggplot(df.elections.postwar,
+                                            aes(
+                                              x = year,
+                                              y = dem.vote
+                                              )) +
+    geom_bar(stat = "identity",fill = "grey", show.legend = FALSE,
+           aes(y = oth.vote)
+  ) +
+  geom_bar(stat = "identity", aes(fill = winner)) +
+  geom_line(
+    aes(y = df.elections.postwar$turnout),group = 1
+  ) +
+
+  scale_y_continuous(
+    name = "Democrat plus other votes with time (no. of voters).<br>Line indicates % turnout."
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_x_continuous(breaks = seq(1948,2016,4)) +
+  scale_fill_manual(values = c("light blue", "lightcoral"))
+# historical.election.data.dem.votes.num
+  ggplotly(historical.election.data.dem.votes.num, session = "knitr", width = 800, height = 600) %>% 
+  layout(bargap = 3, autosize=T, margin = default.margin) # l, r, b, t, pad
+  
+  # Here's what we can do with the layout function: https://plot.ly/r/reference/#Layout_and_layout_style_objects
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
