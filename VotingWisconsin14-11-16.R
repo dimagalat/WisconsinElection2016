@@ -5,6 +5,8 @@ require(agricolae); require(ggplot2); library(gridExtra); library(tidyr)
 # Be careful that rstudio git integration does not work on files with spaces in them...
 # http://stackoverflow.com/questions/34105129/using-git-in-r-studio-cannot-stage-modified-code-files
 
+# Information on how to use Plotly can be found here: https://www.r-bloggers.com/plot-with-ggplot2-and-plotly-within-knitr-reports/
+
 options(scipen=999) # Effectively disables scientific numbering
 options(mc.cores = parallel::detectCores()) # This is used for the poll downloads
 
@@ -95,6 +97,22 @@ voting.df.2016.votecand = dplyr::summarise(voting.df.2016.votecand.groups,
 
 voting.df.2016.votecand$turnout = with(voting.df.2016.votecand, dem.votes + rep.votes + oth.votes)
 
+### 2016 results ###
+# Overall results vs polls
+election.2016.group = group_by(counties.2016.bycand, cand)
+election.2016.grouped = dplyr::summarise(election.2016.group,
+                                             votes.rec = sum(votes.rec))
+
+election.2016.grouped$votes.perc = (election.2016.grouped$votes.rec / sum(election.2016.grouped$votes.rec)) * 100
+
+election.2016.grouped$ordered.cands= c(5,1,3,2,4,6,7)
+colours = c("grey", "lightcoral", "dark grey", "light blue", "light green","grey","grey")
+election.2016.grouped = election.2016.grouped[order(election.2016.grouped$ordered.cands), ]
+election.2016.grouped$cand.group = c("Donald J. Trump", "Hillary Clinton",rep("Other",5))
+
+election.2016.grouped$votes.perc.group = with(election.2016.grouped, c(votes.perc[1],votes.perc[2], rep(sum(votes.perc[3:7]), 5)))
+election.2016.grouped$votes.rec.group = with(election.2016.grouped, c(votes.rec[1],votes.rec[2], rep(sum(votes.rec[3:7]), 5)))
+
 rm(voting.df.2016.test,voting.df.2016.votecand.groups)
 
 # Reading in historical vote data ----------------------------------------------------
@@ -105,43 +123,54 @@ voting.history <- url %>%
   html_nodes(xpath='//table[@id="data"]') %>%
   html_table(fill=T)
 
-df.elections = data.frame(1:44)
-df.elections$year = unlist(lapply(voting.history, '[[', 'X3'))
-df.elections$year = as.integer(df.elections$year)
-df.elections$turnout = unlist(lapply(voting.history, '[[', 'X4'))
-df.elections$turnout = as.integer(gsub(",", "", df.elections$turnout))
-df.elections$dem.vote.perc = unlist(lapply(voting.history, '[[', 'X10'))
-df.elections$dem.vote.perc = as.numeric(gsub("%", "", df.elections$dem.vote.perc))
-df.elections$rep.vote.perc = unlist(lapply(voting.history, '[[', 'X11'))
-df.elections$rep.vote.perc = as.numeric(gsub("%", "", df.elections$rep.vote.perc))
+elections.100.years = data.frame(1:44)
+elections.100.years$year = unlist(lapply(voting.history, '[[', 'X3'))
+elections.100.years$year = as.integer(elections.100.years$year)
+elections.100.years$turnout = unlist(lapply(voting.history, '[[', 'X4'))
+elections.100.years$turnout = as.integer(gsub(",", "", elections.100.years$turnout))
+elections.100.years$dem.vote.perc = unlist(lapply(voting.history, '[[', 'X10'))
+elections.100.years$dem.vote.perc = as.numeric(gsub("%", "", elections.100.years$dem.vote.perc))
+elections.100.years$rep.vote.perc = unlist(lapply(voting.history, '[[', 'X11'))
+elections.100.years$rep.vote.perc = as.numeric(gsub("%", "", elections.100.years$rep.vote.perc))
 
 # Independents and others
-df.elections$ind.vote.perc = unlist(lapply(voting.history, '[[', 'X12'))
-df.elections$ind.vote.perc = as.numeric(gsub("%", "", df.elections$ind.vote.perc))
-df.elections$oth.vote.perc = unlist(lapply(voting.history, '[[', 'X13'))
-df.elections$oth.vote.perc = as.numeric(gsub("%", "", df.elections$oth.vote.perc))
+elections.100.years$ind.vote.perc = unlist(lapply(voting.history, '[[', 'X12'))
+elections.100.years$ind.vote.perc = as.numeric(gsub("%", "", elections.100.years$ind.vote.perc))
+elections.100.years$oth.vote.perc = unlist(lapply(voting.history, '[[', 'X13'))
+elections.100.years$oth.vote.perc = as.numeric(gsub("%", "", elections.100.years$oth.vote.perc))
 
-df.elections$dem.vote = unlist(lapply(voting.history, '[[', 'X14'))
-df.elections$dem.vote = as.integer(gsub(",", "", df.elections$dem.vote))
-df.elections$rep.vote = unlist(lapply(voting.history, '[[', 'X15'))
-df.elections$rep.vote = as.integer(gsub(",", "", df.elections$rep.vote))
+elections.100.years$dem.vote = unlist(lapply(voting.history, '[[', 'X14'))
+elections.100.years$dem.vote = as.integer(gsub(",", "", elections.100.years$dem.vote))
+elections.100.years$rep.vote = unlist(lapply(voting.history, '[[', 'X15'))
+elections.100.years$rep.vote = as.integer(gsub(",", "", elections.100.years$rep.vote))
 
-df.elections$ind.vote = unlist(lapply(voting.history, '[[', 'X16'))
-df.elections$ind.vote = as.integer(gsub(",", "", df.elections$ind.vote))
-df.elections$oth.vote = unlist(lapply(voting.history, '[[', 'X17'))
-df.elections$oth.vote = as.integer(gsub(",", "", df.elections$oth.vote))
+elections.100.years$ind.vote = unlist(lapply(voting.history, '[[', 'X16'))
+elections.100.years$ind.vote = as.integer(gsub(",", "", elections.100.years$ind.vote))
+elections.100.years$oth.vote = unlist(lapply(voting.history, '[[', 'X17'))
+elections.100.years$oth.vote = as.integer(gsub(",", "", elections.100.years$oth.vote))
 
-df.elections$X1.44 = NULL
-df.elections = df.elections[-c(1:3), ]
+elections.100.years$X1.44 = NULL
+elections.100.years = elections.100.years[-c(1:3), ]
+
+### Writing the 2016 results from my other input file, because the numbers there aren't quite the same
+elections.100.years$rep.vote.perc[1] = election.2016.grouped$votes.perc[1]
+elections.100.years$dem.vote.perc[1] = election.2016.grouped$votes.perc[2]
+elections.100.years$oth.vote.perc[1] = sum(election.2016.grouped$votes.perc[3:6])
+elections.100.years$ind.vote.perc[1] = election.2016.grouped$votes.perc[7]
+
+elections.100.years$rep.vote[1] = election.2016.grouped$votes.rec[1]
+elections.100.years$dem.vote[1] = election.2016.grouped$votes.rec[2]
+elections.100.years$oth.vote[1] = sum(election.2016.grouped$votes.rec[3:6])
+elections.100.years$ind.vote[1] = election.2016.grouped$votes.rec[7]
 
 # Total others = independents + others
-df.elections$tot.oth.vote.perc = df.elections$ind.vote.perc + df.elections$oth.vote.perc
-df.elections$tot.oth.vote = df.elections$ind.vote + df.elections$oth.vote
+elections.100.years$tot.oth.vote.perc = elections.100.years$ind.vote.perc + elections.100.years$oth.vote.perc
+elections.100.years$tot.oth.vote = elections.100.years$ind.vote + elections.100.years$oth.vote
 
 
-df.elections$vote.perc.diff = df.elections$rep.vote.perc - df.elections$dem.vote.perc
-df.elections$vote.num.diff = df.elections$rep.vote - df.elections$dem.vote
-df.elections$winner = with(df.elections, ifelse(vote.perc.diff < 0, "Dem", "Rep"))
+elections.100.years$vote.perc.diff = elections.100.years$rep.vote.perc - elections.100.years$dem.vote.perc
+elections.100.years$vote.num.diff = elections.100.years$rep.vote - elections.100.years$dem.vote
+elections.100.years$winner = with(elections.100.years, ifelse(vote.perc.diff < 0, "Dem", "Rep"))
 
 ## File reference not working?
 # From here: https://www.google.es/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0ahUKEwjChuux5qfQAhWCrxoKHXcKDqYQFggdMAA&url=http%3A%2F%2Felections.wi.gov%2Fsites%2Fdefault%2Ffiles%2Fpage%2Fvoter_turnout_partisan_nonpartisan_xlsx_13632.xlsx&usg=AFQjCNHNxn4e1xNCCjaLXekHxuAKT_dFxg
@@ -154,31 +183,31 @@ historical.turnout = read.xlsx(
 )
 colnames(historical.turnout) = tolower(colnames(historical.turnout))
 historical.turnout.join = with(historical.turnout, data.frame(year, voting.age.population))
-df.elections = join(df.elections, historical.turnout.join, by = "year")
-df.elections$turnout.perc = with(df.elections, (turnout / voting.age.population)) * 100
+elections.100.years = join(elections.100.years, historical.turnout.join, by = "year")
+elections.100.years$turnout.perc = with(elections.100.years, (turnout / voting.age.population)) * 100
 
-df.elections$swing.turnout.perc = NA
-for (i in (2:(length(df.elections$year) - 1))) {
-  df.elections$swing.turnout.perc[i - 1] =  -(df.elections$turnout.perc[i] - df.elections$turnout.perc[i -1])
-  df.elections$swing.vote.num[i - 1] =  -(df.elections$vote.num.diff[i] - df.elections$vote.num.diff[i - 1])
-  df.elections$swing.vote.perc[i - 1] =  -(df.elections$vote.perc.diff[i] - df.elections$vote.perc.diff[i - 1])
-  df.elections$swing.vote.dem.change.perc[i - 1] =  (df.elections$dem.vote.perc[i-1] - df.elections$dem.vote.perc[i])
-  df.elections$swing.vote.dem.change.num[i - 1] =  (df.elections$dem.vote.num[i-1] - df.elections$dem.vote.num[i])
-  df.elections$swing.vote.rep.change.perc[i - 1] =  (df.elections$rep.vote.perc[i-1] - df.elections$rep.vote.perc[i])
-  df.elections$swing.vote.rep.change.num[i - 1] =  (df.elections$rep.vote.num[i-1] - df.elections$rep.vote.num[i])
-  df.elections$swing.vote.tot.oth.change.perc[i - 1] =  (df.elections$tot.oth.vote.perc[i-1] - df.elections$tot.oth.vote.perc[i])
-  df.elections$swing.vote.tot.oth.change.num[i - 1] =  (df.elections$tot.oth.vote.num[i-1] - df.elections$tot.oth.vote.num[i])
+elections.100.years$swing.turnout.perc = NA
+for (i in (2:(length(elections.100.years$year) - 1))) {
+  elections.100.years$swing.turnout.perc[i - 1] =  -(elections.100.years$turnout.perc[i] - elections.100.years$turnout.perc[i -1])
+  elections.100.years$swing.vote.num[i - 1] =  -(elections.100.years$vote.num.diff[i] - elections.100.years$vote.num.diff[i - 1])
+  elections.100.years$swing.vote.perc[i - 1] =  -(elections.100.years$vote.perc.diff[i] - elections.100.years$vote.perc.diff[i - 1])
+  elections.100.years$swing.vote.dem.change.perc[i - 1] =  (elections.100.years$dem.vote.perc[i-1] - elections.100.years$dem.vote.perc[i])
+  elections.100.years$swing.vote.dem.change.num[i - 1] =  (elections.100.years$dem.vote.num[i-1] - elections.100.years$dem.vote.num[i])
+  elections.100.years$swing.vote.rep.change.perc[i - 1] =  (elections.100.years$rep.vote.perc[i-1] - elections.100.years$rep.vote.perc[i])
+  elections.100.years$swing.vote.rep.change.num[i - 1] =  (elections.100.years$rep.vote.num[i-1] - elections.100.years$rep.vote.num[i])
+  elections.100.years$swing.vote.tot.oth.change.perc[i - 1] =  (elections.100.years$tot.oth.vote.perc[i-1] - elections.100.years$tot.oth.vote.perc[i])
+  elections.100.years$swing.vote.tot.oth.change.num[i - 1] =  (elections.100.years$tot.oth.vote.num[i-1] - elections.100.years$tot.oth.vote.num[i])
 }
-df.elections.postwar = subset(df.elections, year >= 1948)
+elections.100.years.postwar = subset(elections.100.years, year >= 1948)
 
 
 
 
 # The following variables will be used when I scrape the polls from HuffPost API later
-df.elections$mean.rep.poll.oneweek = NA
-df.elections$mean.dem.poll.oneweek = NA
-df.elections$mean.rep.poll.oneweek.divergence = NA
-df.elections$mean.dem.poll.oneweek.divergence = NA
+elections.100.years$mean.rep.poll.oneweek = NA
+elections.100.years$mean.dem.poll.oneweek = NA
+elections.100.years$mean.rep.poll.oneweek.divergence = NA
+elections.100.years$mean.dem.poll.oneweek.divergence = NA
 
 # Downloading 2016 and 2012 polls ------------------------------------------------------
 # Loading poll data for Wisconsin
@@ -267,31 +296,31 @@ all_polls_2016$other.defs = with(all_polls_2016, other / decided.total) * 100
 # THESE ARE ALL LIKELY VOTERS
 selected_polls_2016.sub = subset(all_polls_2016, start.date > as.Date("2016-11-01"))
 
-df.elections$mean.rep.poll.oneweek[df.elections$year == 2016] = mean(selected_polls_2016.sub$trump)
-df.elections$mean.dem.poll.oneweek[df.elections$year == 2016] = mean(selected_polls_2016.sub$clinton)
-df.elections$mean.oth.poll.oneweek[df.elections$year == 2016] = mean(selected_polls_2016.sub$other,na.rm = T)
-df.elections$mean.und.poll.oneweek[df.elections$year == 2016] = mean(selected_polls_2016.sub$undecided,na.rm = T)
+elections.100.years$mean.rep.poll.oneweek[elections.100.years$year == 2016] = mean(selected_polls_2016.sub$trump)
+elections.100.years$mean.dem.poll.oneweek[elections.100.years$year == 2016] = mean(selected_polls_2016.sub$clinton)
+elections.100.years$mean.oth.poll.oneweek[elections.100.years$year == 2016] = mean(selected_polls_2016.sub$other,na.rm = T)
+elections.100.years$mean.und.poll.oneweek[elections.100.years$year == 2016] = mean(selected_polls_2016.sub$undecided,na.rm = T)
 
-df.elections$mean.rep.poll.oneweek.divergence[df.elections$year == 2016] =
-  df.elections$rep.vote.perc[df.elections$year == 2016] - df.elections$mean.rep.poll.oneweek[df.elections$year == 2016]
-df.elections$mean.dem.poll.oneweek.divergence[df.elections$year == 2016] =
-  df.elections$dem.vote.perc[df.elections$year == 2016] - df.elections$mean.dem.poll.oneweek[df.elections$year == 2016]
-df.elections$mean.other.poll.oneweek.divergence[df.elections$year == 2016] =
-  df.elections$tot.oth.vote.perc[df.elections$year == 2016] - df.elections$mean.oth.poll.oneweek[df.elections$year == 2016]
-df.elections$mean.und.poll.oneweek.divergence[df.elections$year == 2016] =
-  df.elections$tot.und.vote.perc[df.elections$year == 2016] - df.elections$mean.und.poll.oneweek[df.elections$year == 2016]
+elections.100.years$mean.rep.poll.oneweek.divergence[elections.100.years$year == 2016] =
+  elections.100.years$rep.vote.perc[elections.100.years$year == 2016] - elections.100.years$mean.rep.poll.oneweek[elections.100.years$year == 2016]
+elections.100.years$mean.dem.poll.oneweek.divergence[elections.100.years$year == 2016] =
+  elections.100.years$dem.vote.perc[elections.100.years$year == 2016] - elections.100.years$mean.dem.poll.oneweek[elections.100.years$year == 2016]
+elections.100.years$mean.other.poll.oneweek.divergence[elections.100.years$year == 2016] =
+  elections.100.years$tot.oth.vote.perc[elections.100.years$year == 2016] - elections.100.years$mean.oth.poll.oneweek[elections.100.years$year == 2016]
+elections.100.years$mean.und.poll.oneweek.divergence[elections.100.years$year == 2016] =
+  elections.100.years$tot.und.vote.perc[elections.100.years$year == 2016] - elections.100.years$mean.und.poll.oneweek[elections.100.years$year == 2016]
 
 ### Removing unsure voters from polls and reanalysing
-df.elections$mean.rep.poll.oneweek.defs[df.elections$year == 2016] = mean(selected_polls_2016.sub$trump.defs,na.rm = T)
-df.elections$mean.dem.poll.oneweek.defs[df.elections$year == 2016] = mean(selected_polls_2016.sub$clinton.defs,na.rm = T)
-df.elections$mean.oth.poll.oneweek.defs[df.elections$year == 2016] = mean(selected_polls_2016.sub$other.defs,na.rm = T)
+elections.100.years$mean.rep.poll.oneweek.defs[elections.100.years$year == 2016] = mean(selected_polls_2016.sub$trump.defs,na.rm = T)
+elections.100.years$mean.dem.poll.oneweek.defs[elections.100.years$year == 2016] = mean(selected_polls_2016.sub$clinton.defs,na.rm = T)
+elections.100.years$mean.oth.poll.oneweek.defs[elections.100.years$year == 2016] = mean(selected_polls_2016.sub$other.defs,na.rm = T)
 
-df.elections$mean.rep.poll.oneweek.defs.divergence[df.elections$year == 2016] =
-  df.elections$rep.vote.perc[df.elections$year == 2016] - df.elections$mean.rep.poll.oneweek.defs[df.elections$year == 2016]
-df.elections$mean.dem.poll.oneweek.defs.divergence[df.elections$year == 2016] =
-  df.elections$dem.vote.perc[df.elections$year == 2016] - df.elections$mean.dem.poll.oneweek.defs[df.elections$year == 2016]
-df.elections$mean.other.defs.poll.oneweek.defs.divergence[df.elections$year == 2016] =
-  df.elections$tot.oth.vote.perc[df.elections$year == 2016] - df.elections$mean.oth.poll.oneweek.defs[df.elections$year == 2016]
+elections.100.years$mean.rep.poll.oneweek.defs.divergence[elections.100.years$year == 2016] =
+  elections.100.years$rep.vote.perc[elections.100.years$year == 2016] - elections.100.years$mean.rep.poll.oneweek.defs[elections.100.years$year == 2016]
+elections.100.years$mean.dem.poll.oneweek.defs.divergence[elections.100.years$year == 2016] =
+  elections.100.years$dem.vote.perc[elections.100.years$year == 2016] - elections.100.years$mean.dem.poll.oneweek.defs[elections.100.years$year == 2016]
+elections.100.years$mean.other.defs.poll.oneweek.defs.divergence[elections.100.years$year == 2016] =
+  elections.100.years$tot.oth.vote.perc[elections.100.years$year == 2016] - elections.100.years$mean.oth.poll.oneweek.defs[elections.100.years$year == 2016]
 
 # Plotting the polls over time one week before the 2016 election
 polls.wisc.point.2016 = ggplot(selected_polls_2016.sub, aes(x = start.date, y = trump)) +
@@ -340,31 +369,31 @@ all_polls_2012$other.defs = with(all_polls_2012, other / decided.total) * 100
 # Subsetting for polls started one week before election day. Election was on 06-11-12
 selected_polls_2012.sub = subset(all_polls_2012, start.date > as.Date("2012-10-30"))
 
-df.elections$mean.rep.poll.oneweek[df.elections$year == 2012] = mean(selected_polls_2012.sub$romney)
-df.elections$mean.dem.poll.oneweek[df.elections$year == 2012] = mean(selected_polls_2012.sub$obama)
-df.elections$mean.oth.poll.oneweek[df.elections$year == 2012] = mean(selected_polls_2012.sub$other, na.rm = T)
-df.elections$mean.und.poll.oneweek[df.elections$year == 2012] = mean(selected_polls_2012.sub$undecided,na.rm = T)
+elections.100.years$mean.rep.poll.oneweek[elections.100.years$year == 2012] = mean(selected_polls_2012.sub$romney)
+elections.100.years$mean.dem.poll.oneweek[elections.100.years$year == 2012] = mean(selected_polls_2012.sub$obama)
+elections.100.years$mean.oth.poll.oneweek[elections.100.years$year == 2012] = mean(selected_polls_2012.sub$other, na.rm = T)
+elections.100.years$mean.und.poll.oneweek[elections.100.years$year == 2012] = mean(selected_polls_2012.sub$undecided,na.rm = T)
 
-df.elections$mean.rep.poll.oneweek.divergence[df.elections$year == 2012] =
-  df.elections$rep.vote.perc[df.elections$year == 2012] - df.elections$mean.rep.poll.oneweek[df.elections$year == 2012]
-df.elections$mean.dem.poll.oneweek.divergence[df.elections$year == 2012] =
-  df.elections$dem.vote.perc[df.elections$year == 2012] - df.elections$mean.dem.poll.oneweek[df.elections$year == 2012]
-df.elections$mean.other.poll.oneweek.divergence[df.elections$year == 2012] =
-  df.elections$tot.oth.vote.perc[df.elections$year == 2012] - df.elections$mean.oth.poll.oneweek[df.elections$year == 2012]
-df.elections$mean.other.poll.oneweek.divergence[df.elections$year == 2012] =
-  df.elections$tot.oth.vote.perc[df.elections$year == 2012] - df.elections$mean.oth.poll.oneweek[df.elections$year == 2012]
+elections.100.years$mean.rep.poll.oneweek.divergence[elections.100.years$year == 2012] =
+  elections.100.years$rep.vote.perc[elections.100.years$year == 2012] - elections.100.years$mean.rep.poll.oneweek[elections.100.years$year == 2012]
+elections.100.years$mean.dem.poll.oneweek.divergence[elections.100.years$year == 2012] =
+  elections.100.years$dem.vote.perc[elections.100.years$year == 2012] - elections.100.years$mean.dem.poll.oneweek[elections.100.years$year == 2012]
+elections.100.years$mean.other.poll.oneweek.divergence[elections.100.years$year == 2012] =
+  elections.100.years$tot.oth.vote.perc[elections.100.years$year == 2012] - elections.100.years$mean.oth.poll.oneweek[elections.100.years$year == 2012]
+elections.100.years$mean.other.poll.oneweek.divergence[elections.100.years$year == 2012] =
+  elections.100.years$tot.oth.vote.perc[elections.100.years$year == 2012] - elections.100.years$mean.oth.poll.oneweek[elections.100.years$year == 2012]
 
 ###
-df.elections$mean.rep.poll.oneweek.defs[df.elections$year == 2012] = mean(selected_polls_2012.sub$romney.defs,na.rm = T)
-df.elections$mean.dem.poll.oneweek.defs[df.elections$year == 2012] = mean(selected_polls_2012.sub$obama.defs,na.rm = T)
-df.elections$mean.oth.poll.oneweek.defs[df.elections$year == 2012] = mean(selected_polls_2012.sub$other.defs,na.rm = T)
+elections.100.years$mean.rep.poll.oneweek.defs[elections.100.years$year == 2012] = mean(selected_polls_2012.sub$romney.defs,na.rm = T)
+elections.100.years$mean.dem.poll.oneweek.defs[elections.100.years$year == 2012] = mean(selected_polls_2012.sub$obama.defs,na.rm = T)
+elections.100.years$mean.oth.poll.oneweek.defs[elections.100.years$year == 2012] = mean(selected_polls_2012.sub$other.defs,na.rm = T)
 
-df.elections$mean.rep.poll.oneweek.defs.divergence[df.elections$year == 2012] =
-  df.elections$rep.vote.perc[df.elections$year == 2012] - df.elections$mean.rep.poll.oneweek.defs[df.elections$year == 2012]
-df.elections$mean.dem.poll.oneweek.defs.divergence[df.elections$year == 2012] =
-  df.elections$dem.vote.perc[df.elections$year == 2012] - df.elections$mean.dem.poll.oneweek.defs[df.elections$year == 2012]
-df.elections$mean.other.defs.poll.oneweek.defs.divergence[df.elections$year == 2012] =
-  df.elections$tot.oth.vote.perc[df.elections$year == 2012] - df.elections$mean.oth.poll.oneweek.defs[df.elections$year == 2012]
+elections.100.years$mean.rep.poll.oneweek.defs.divergence[elections.100.years$year == 2012] =
+  elections.100.years$rep.vote.perc[elections.100.years$year == 2012] - elections.100.years$mean.rep.poll.oneweek.defs[elections.100.years$year == 2012]
+elections.100.years$mean.dem.poll.oneweek.defs.divergence[elections.100.years$year == 2012] =
+  elections.100.years$dem.vote.perc[elections.100.years$year == 2012] - elections.100.years$mean.dem.poll.oneweek.defs[elections.100.years$year == 2012]
+elections.100.years$mean.other.defs.poll.oneweek.defs.divergence[elections.100.years$year == 2012] =
+  elections.100.years$tot.oth.vote.perc[elections.100.years$year == 2012] - elections.100.years$mean.oth.poll.oneweek.defs[elections.100.years$year == 2012]
 
 
 # Plotting the polls over time one week before the 2016 election
@@ -393,11 +422,11 @@ county.summary.df$num.diff = county.summary.df$rep.votes - county.summary.df$dem
 county.summary.df$winner = ifelse(county.summary.df$perc.diff > 0, "Trump", "Clinton")
 county.summary.df$winner.party = ifelse(county.summary.df$perc.diff > 0, "Rep", "Dem")
 
-county.summary.df$mean.poll.trump = df.elections$mean.rep.poll.oneweek[df.elections$year == 2016]
-county.summary.df$mean.poll.clinton = df.elections$mean.dem.poll.oneweek[df.elections$year == 2016]
+county.summary.df$mean.poll.trump = elections.100.years$mean.rep.poll.oneweek[elections.100.years$year == 2016]
+county.summary.df$mean.poll.clinton = elections.100.years$mean.dem.poll.oneweek[elections.100.years$year == 2016]
 
 county.summary.df$turnout.all = sum(county.summary.df$turnout)
-# df.elections$turnout.all = sum(county.summary.df$turnout)
+# elections.100.years$turnout.all = sum(county.summary.df$turnout)
 
 # Calculating turnout by county
 # Calculating turnout of registered voters by November 2nd. BUT, this has been seen in past to
@@ -421,18 +450,18 @@ county.summary.df = county.summary.df[order(county.summary.df$county), ]
 registered.voters = registered.voters[order(registered.voters$county), ]
 
 county.summary.df$reg.voters.all = sum(registered.voters$registered.voters)
-# df.elections$reg.voters.all = sum(registered.voters$registered.voters)
+# elections.100.years$reg.voters.all = sum(registered.voters$registered.voters)
 
 county.summary.df$registered.voters = registered.voters$registered.voters
 county.summary.df$turnout.perc.reg = (county.summary.df$turnout / county.summary.df$registered.voters) * 100
 county.summary.df$turnout.state.reg = (sum(county.summary.df$turnout) / sum(county.summary.df$registered.voters)) * 100
-# df.elections$turnout.state.reg = mean(county.summary.df$turnout.state.reg)
+# elections.100.years$turnout.state.reg = mean(county.summary.df$turnout.state.reg)
 
 ## Calculating turnout of voting age population
 ## I can only estimate the turnout per county based on the 2012 voting age populations
 # from file "general_election_voter_registration... this has the 2016 value"
-# df.elections$voting.age.pop = 4449170
-# df.elections$turnout.overall = sum(df.elections$votes.rec / df.elections$voting.age.pop)
+# elections.100.years$voting.age.pop = 4449170
+# elections.100.years$turnout.overall = sum(elections.100.years$votes.rec / elections.100.years$voting.age.pop)
 
 voting.age.people = read.xlsx(
   "Wisconsin election stats\\2012_presidential_general_election_turnout_xlsx_11916.xlsx",
@@ -447,7 +476,7 @@ total.2012.pop.wi = sum(voting.age.people$Voting.Age.Estimate.2012)
 # Estimated 1.01% increase in voting age population from 2012 to 2016. I will multiply the
 # 2012 county voter data by 101.01% to try to account for this increase. Yes, this is an assumption,
 # but newer data is not yet available!
-prop.2016.voting.age.to.2012.est = mean(df.elections$voting.age.pop[df.elections$year == 2016]) / total.2012.pop.wi
+prop.2016.voting.age.to.2012.est = mean(elections.100.years$voting.age.pop[elections.100.years$year == 2016]) / total.2012.pop.wi
 
 voting.age.people$Voting.Age.Estimate.2016 = voting.age.people$Voting.Age.Estimate.2012 * prop.2016.voting.age.to.2012.est
 voting.age.people$Voting.Age.Estimate.2016 = ceiling(voting.age.people$Voting.Age.Estimate.2016)
@@ -768,33 +797,33 @@ county.summary.2016.final$county = as.character(county.summary.2016.final$county
 } # 2000 data frame
 
 # Making final length data frame
-historical.counties = rbind(county.summary.2016.final,county.summary.2012.final,
+counties.2000.2016 = rbind(county.summary.2016.final,county.summary.2012.final,
                             election.2008.final,election.2004.final,election.2000.final)
-historical.counties$county = factor(historical.counties$county)
+counties.2000.2016$county = factor(counties.2000.2016$county)
 
 # Adding extra columns
-county.winners = as.data.frame(table(historical.counties$county[historical.counties$winning.party == "Dem"]))
+county.winners = as.data.frame(table(counties.2000.2016$county[counties.2000.2016$winning.party == "Dem"]))
 colnames(county.winners) = c("county","dem.wins")
 
-historical.counties = join(historical.counties, county.winners, by = "county")
-historical.counties$mostly.dem = with(historical.counties, ifelse(dem.wins >= 3, "Mostly Dem",
+counties.2000.2016 = join(counties.2000.2016, county.winners, by = "county")
+counties.2000.2016$mostly.dem = with(counties.2000.2016, ifelse(dem.wins >= 3, "Mostly Dem",
                                                                   "Mostly Rep"))
-historical.counties$dem.2016 = with(historical.counties, ifelse(year == 2016 &
+counties.2000.2016$dem.2016 = with(counties.2000.2016, ifelse(year == 2016 &
                                                                   winning.party == "Dem",
                                                                 "Dem2016", "Rep2016"))
-low.turnout.quant = quantile(historical.counties$swing.turnout.perc[historical.counties$year == 2016])[2]
+low.turnout.quant = quantile(counties.2000.2016$swing.turnout.perc[counties.2000.2016$year == 2016])[2]
 low.turnout.quant = unname(low.turnout.quant)
 
-historical.counties$most.turnout.drop = with(historical.counties, ifelse(swing.turnout.perc < low.turnout.quant,
+counties.2000.2016$most.turnout.drop = with(counties.2000.2016, ifelse(swing.turnout.perc < low.turnout.quant,
                                                                          "Large turnout change 2016", "Little turnout change 2016"))
 
-historical.counties.2016 = historical.counties
-historical.counties.2016 = subset(historical.counties.2016, !is.na(most.turnout.drop))
+counties.2000.2016.2016 = counties.2000.2016
+counties.2000.2016.2016 = subset(counties.2000.2016.2016, !is.na(most.turnout.drop))
 
-historical.counties.quant.join = data.frame(historical.counties.2016$county,historical.counties.2016$most.turnout.drop)
-colnames(historical.counties.quant.join) = c("county","most.turnout.drop")
+counties.2000.2016.quant.join = data.frame(counties.2000.2016.2016$county,counties.2000.2016.2016$most.turnout.drop)
+colnames(counties.2000.2016.quant.join) = c("county","most.turnout.drop")
 
-historical.counties = join(historical.counties, historical.counties.quant.join, by = "county")
+counties.2000.2016 = join(counties.2000.2016, counties.2000.2016.quant.join, by = "county")
 
 # Loading voting machine data ---------------------------------------------
 # This file from here: http://elections.wi.gov/elections-voting/voting-equipment/voting-equipment-use
@@ -867,7 +896,7 @@ str(machine.join$use.machines.prop)
 machine.join$all.machines = with(machine.join, ifelse(use.machines.prop > 0.75, "Mostly voting machines",
                                                       "Some or no voting machines"))
 
-historical.counties = join(historical.counties,machine.join,by="county")
+counties.2000.2016 = join(counties.2000.2016,machine.join,by="county")
 
 county.summary.2016.final = county.summary.2016.final[order(county.summary.2016.final$county), ]
 county.summary.2016.final$use.machines.prop = vot.equip.county$use.machines.prop
@@ -878,14 +907,15 @@ rm(vote.equip.county.machines,vote.equip.county.grouped,voting.age.people,test,
 
 # Write final csvs --------------------------------------------------------
 
-write.csv(voting.df.2016,"voting.2016.indepth.csv")
-write.csv(county.summary.df,"county.summary.df.csv")
-write.csv(historical.counties,"historical.counties.csv")
+write.csv(election.2016.grouped,"candidate.2016.summary.csv")
+write.csv(voting.df.2016,"counties.2016.bycand.csv")
+write.csv(county.summary.df,"county.2016.vs.2012.csv")
+write.csv(counties.2000.2016,"counties.2000.2016.csv")
 write.csv(all_polls_2012,"all_polls_2012.csv")
 write.csv(all_polls_2016,"all_polls_2016.csv")
 write.csv(selected_polls_2012.sub,"selected_polls_2012.sub.csv")
 write.csv(selected_polls_2016.sub,"selected_polls_2016.sub.csv")
-write.csv(df.elections,"df.elections.csv")
+write.csv(elections.100.years,"elections.100.years.csv")
 
 
 # Read in csvs and subset for use ------------------------------------------------------------
@@ -895,44 +925,18 @@ require("devtools")  # so we can install from GitHub
 
 setwd("C:\\Users\\s_cas\\Dropbox\\Perso\\2016 voting election county results\\Wisconsin")
 
-county.summary.df = read.csv("county.summary.df.csv")
-historical.counties = read.csv("historical.counties.csv")
+candidate.2016.summary = read.csv("candidate.2016.summary.csv")
+counties.2016.bycand = read.csv("counties.2016.bycand.csv")
+county.2016.vs.2012 = read.csv("county.2016.vs.2012.csv")
+counties.2000.2016 = read.csv("counties.2000.2016.csv")
+elections.100.years = read.csv("elections.100.years.csv")
 all_polls_2012 = read.csv("all_polls_2012.csv")
 all_polls_2016 = read.csv("all_polls_2016.csv")
 selected_polls_2012.sub = read.csv("selected_polls_2012.sub.csv")
 selected_polls_2016.sub = read.csv("selected_polls_2016.sub.csv")
-df.elections = read.csv("df.elections.csv")
-voting.2016.indepth = read.csv("voting.2016.indepth.csv")
 
-df.elections.summary.2016 = subset(df.elections, year == 2016)
-df.elections.postwar = subset(df.elections, year >= 1948)
-
-### 2016 results ###
-# Overall results vs polls
-df.elections.2016.group = group_by(voting.2016.indepth, cand)
-df.elections.2016.grouped = dplyr::summarise(df.elections.2016.group,
-                                             votes.rec = sum(votes.rec))
-
-df.elections.2016.grouped$votes.perc = (df.elections.2016.grouped$votes.rec / sum(df.elections.2016.grouped$votes.rec)) * 100
-
-df.elections.2016.grouped$ordered.cands= c(5,1,3,2,4,6,7)
-colours = c("grey", "lightcoral", "dark grey", "light blue", "light green","grey","grey")
-df.elections.2016.grouped = df.elections.2016.grouped[order(df.elections.2016.grouped$ordered.cands), ]
-df.elections.2016.grouped$cand.group = c("Donald J. Trump", "Hillary Clinton",rep("Other",5))
-df.elections.2016.grouped$votes.perc.group = with(df.elections.2016.grouped, c(votes.perc[1],votes.perc[2], rep(sum(votes.perc[3:7]), 5)))
-df.elections.2016.grouped$votes.rec.group = with(df.elections.2016.grouped, c(votes.rec[1],votes.rec[2], rep(sum(votes.rec[3:7]), 5)))
-
-### Writing these results into the election summary file, because the numbers there aren't quite the same
-df.elections$dem.vote.perc[1] = df.elections.2016.grouped$votes.perc[1]
-df.elections$rep.vote.perc[1] = df.elections.2016.grouped$votes.perc[2]
-df.elections$oth.vote.perc[1] = sum(df.elections.2016.grouped$votes.perc[3:6])
-df.elections$ind.vote.perc[1] = df.elections.2016.grouped$votes.perc[7]
-
-df.elections$dem.vote[1] = df.elections.2016.grouped$votes.rec[1]
-df.elections$rep.vote[1] = df.elections.2016.grouped$votes.rec[2]
-df.elections$oth.vote[1] = sum(df.elections.2016.grouped$votes.rec[3:6])
-df.elections$ind.vote[1] = df.elections.2016.grouped$votes.rec[7]
-
+elections.100.years.summary.2016 = subset(elections.100.years, year == 2016)
+elections.100.years.postwar = subset(elections.100.years, year >= 1948)
 
 ## Comparing the definite poll voters with the final result
 poll.summary.2016 = data.frame(c(1:4))
@@ -940,51 +944,61 @@ poll.summary.2016$cand.group = c("Donald J. Trump", "Hillary Clinton", "Other","
 poll.summary.2016$polls.nov = with(selected_polls_2016.sub,
                                    c(mean(trump),mean(clinton),mean(other),mean(undecided,na.rm=T)))
 poll.summary.2016$c.1.4. = NULL
-poll.summary.2016$polls.nov.def = with(df.elections.summary.2016, c(mean.rep.poll.oneweek.defs, mean.dem.poll.oneweek.defs, mean.oth.poll.oneweek.defs,NA))
+poll.summary.2016$polls.nov.def = with(elections.100.years.summary.2016, c(mean.rep.poll.oneweek.defs, mean.dem.poll.oneweek.defs, mean.oth.poll.oneweek.defs,NA))
 
-df.elections.2016.grouped$polls.nov = with(poll.summary.2016, c(polls.nov[1], polls.nov[2], rep(polls.nov[3],5)))
-df.elections.2016.grouped$polls.nov.def = with(poll.summary.2016, c(polls.nov.def[1], polls.nov.def[2], rep(polls.nov.def[3],5)))
+candidate.2016.summary$polls.nov = with(poll.summary.2016, c(polls.nov[1], polls.nov[2], rep(polls.nov[3],5)))
+candidate.2016.summary$polls.nov.def = with(poll.summary.2016, c(polls.nov.def[1], polls.nov.def[2], rep(polls.nov.def[3],5)))
 
-df.elections.2016.grouped$diff.from.poll = df.elections.2016.grouped$votes.perc.group - df.elections.2016.grouped$polls.nov
-df.elections.2016.grouped$diff.from.poll.defs = df.elections.2016.grouped$votes.perc.group - df.elections.2016.grouped$polls.nov.def
+candidate.2016.summary$diff.from.poll = candidate.2016.summary$votes.perc.group - candidate.2016.summary$polls.nov
+candidate.2016.summary$diff.from.poll.defs = candidate.2016.summary$votes.perc.group - candidate.2016.summary$polls.nov.def
 
 
 ### 2012 results ###
-df.elections.summary.2012 = df.elections.postwar[2,]
+elections.100.years.summary.2012 = elections.100.years.postwar[2,]
 
 poll.summary.2012 = data.frame(c(1:4))
 poll.summary.2012$cand.group = c("Mitt Romney", "Barack Obama", "Other","Undecided")
 poll.summary.2012$polls.nov = with(selected_polls_2012.sub,
                                    c(mean(romney),mean(obama),mean(other,na.rm=T),mean(undecided,na.rm=T)))
 poll.summary.2012$c.1.4. = NULL
-poll.summary.2012$polls.nov.def = with(df.elections.summary.2012, c(mean.rep.poll.oneweek.defs, mean.dem.poll.oneweek.defs, mean.oth.poll.oneweek.defs,NA))
+poll.summary.2012$polls.nov.def = with(elections.100.years.summary.2012, c(mean.rep.poll.oneweek.defs, mean.dem.poll.oneweek.defs, mean.oth.poll.oneweek.defs,NA))
 
-poll.summary.2012$vote = with(df.elections.summary.2012, c(rep.vote, dem.vote, oth.vote,NA))
-poll.summary.2012$vote.perc = with(df.elections.summary.2012, c(rep.vote.perc, dem.vote.perc, oth.vote.perc,NA))
+poll.summary.2012$vote = with(elections.100.years.summary.2012, c(rep.vote, dem.vote, oth.vote,NA))
+poll.summary.2012$vote.perc = with(elections.100.years.summary.2012, c(rep.vote.perc, dem.vote.perc, oth.vote.perc,NA))
 
 poll.summary.2012$diff.from.polls = with(poll.summary.2012, vote.perc - polls.nov)
 poll.summary.2012$diff.from.polls.defs = with(poll.summary.2012, vote.perc - polls.nov.def)
 
 poll.summary.2012.nounds = poll.summary.2012[1:3,]
 
+## VISUALISING THE 2016 RESULTS
+county.summary.compare = subset(counties.2000.2016, year == 2016)
+county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$county), ]
+added.columns = county.summary.compare[,24:32]
+county.2016.vs.2012 = cbind(county.2016.vs.2012, added.columns)
+
+county.2016.vs.2012$total.voters.age.est= as.integer(county.2016.vs.2012$total.voters.age.est)
+county.2016.vs.2012.5000 = subset(county.2016.vs.2012, total.voters.age.est > 5000)
+
+
 # Comparing 2016 candidate results overall -------------------------------------
 # The majority of 'other' voters went for Gary Johnson. Hillary massively underperformed compared
 # to decided voter polling, and Trump slightly overperformed. This means that more of the 'undecideds'
 # went to Trump, or that many undecideds that would have voted Hillary chose not to turn up.
 
-df.elections.2016.grouped.vis.defs = ggplot(df.elections.2016.grouped,
+candidate.2016.summary.vis.defs = ggplot(candidate.2016.summary,
                                             aes(x = ordered.cands, y = votes.perc, fill = cand,group =1)) +
   geom_bar(stat = "identity") +
   geom_line(stat = "identity",
-            aes(y = df.elections.summary.2016$mean.dem.poll.oneweek.defs),
+            aes(y = elections.100.years.summary.2016$mean.dem.poll.oneweek.defs),
             colour = "blue", linetype = 2,
             show.legend = F) +
   geom_line(stat = "identity",
-            aes(y = df.elections.summary.2016$mean.rep.poll.oneweek.defs),
+            aes(y = elections.100.years.summary.2016$mean.rep.poll.oneweek.defs),
             colour = "red", linetype = 2,
             show.legend = F) +
   geom_line(stat = "identity",
-            aes(y = df.elections.summary.2016$mean.oth.poll.oneweek.defs),
+            aes(y = elections.100.years.summary.2016$mean.oth.poll.oneweek.defs),
             colour = "black", linetype = 2,
             show.legend = F) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
@@ -994,49 +1008,49 @@ df.elections.2016.grouped.vis.defs = ggplot(df.elections.2016.grouped,
       "Percentage votes for the candidates.Lines indicate polling\n of decided voters,excluding those who were unsure."
   ) +
   scale_x_discrete(
-    limit =  df.elections.2016.grouped$ordered.cands,
-    labels = as.character(df.elections.2016.grouped$cand),
+    limit =  candidate.2016.summary$ordered.cands,
+    labels = as.character(candidate.2016.summary$cand),
     name = NULL) +
   scale_fill_manual(values = colours)
-df.elections.2016.grouped.vis.defs
+candidate.2016.summary.vis.defs
 
 # This is a cheesy way to remove all the other candidates apart from Johnson
-df.elections.2016.grouped.small = subset(df.elections.2016.grouped, votes.rec > 100000)
+candidate.2016.summary.small = subset(candidate.2016.summary, votes.rec > 100000)
 
 # Comparing polls of ALL with results
-poll.2016.compare.vis.all = ggplot(df.elections.2016.grouped.small, aes(x = cand.group, y = diff.from.poll, fill = cand.group, group = 1)) +
-  # geom_line(stat = "identity",show.legend = F, aes(y = df.elections.summary.2016$polls.nov)) +
-  geom_bar(stat = "identity", show.legend = F) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  coord_cartesian(ylim = c(-6,6)) +
-  scale_y_continuous(
-    name =
-      "The % difference between all voter polls\n and the final result of the 2016 presidential election."
-  ) +
-  scale_x_discrete(
-    limit =  df.elections.2016.grouped.small$cand.group,
-    labels = as.character(df.elections.2016.grouped.small$cand.group),
-    name = NULL) +
-  scale_fill_manual(values = c("lightcoral","light blue","dark grey"))
-poll.2016.compare.vis.all
+# poll.2016.compare.vis.all = ggplot(candidate.2016.summary.small, aes(x = cand.group, y = diff.from.poll, fill = cand.group, group = 1)) +
+#   # geom_line(stat = "identity",show.legend = F, aes(y = elections.100.years.summary.2016$polls.nov)) +
+#   geom_bar(stat = "identity", show.legend = F) +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+#   coord_cartesian(ylim = c(-6,6)) +
+#   scale_y_continuous(
+#     name =
+#       "The % difference between all voter polls\n and the final result of the 2016 presidential election."
+#   ) +
+#   scale_x_discrete(
+#     limit =  candidate.2016.summary.small$cand.group,
+#     labels = as.character(candidate.2016.summary.small$cand.group),
+#     name = NULL) +
+#   scale_fill_manual(values = c("lightcoral","light blue","dark grey"))
+# poll.2016.compare.vis.all
 
 
 
 # The divergence between definite voters in polls and reality was greatest for Clinton,
 # and the 'other' votes was not much different from the polls. So, either the turnout dropped
 # significantly for Clinton, or the undecideds went to Trump
-poll.2016.compare.vis.defs = ggplot(df.elections.2016.grouped.small, aes(x = cand.group, y = diff.from.poll.defs, fill = cand.group, group = 1)) +
-  # geom_line(stat = "identity",show.legend = F, aes(y = df.elections.summary.2016$polls.nov)) +
+poll.2016.compare.vis.defs = ggplot(candidate.2016.summary.small, aes(x = cand.group, y = diff.from.poll.defs, fill = cand.group, group = 1)) +
+  # geom_line(stat = "identity",show.legend = F, aes(y = elections.100.years.summary.2016$polls.nov)) +
   geom_bar(stat = "identity", show.legend = F) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  coord_cartesian(ylim = c(-6,6)) +
+  coord_cartesian(ylim = c(-5,5)) +
   scale_y_continuous(
     name =
       "The % difference between definite voter polls\n and the final result of the 2016 presidential election."
   ) +
   scale_x_discrete(
-    limit =  df.elections.2016.grouped.small$cand.group,
-    labels = as.character(df.elections.2016.grouped.small$cand.group),
+    limit =  candidate.2016.summary.small$cand.group,
+    labels = as.character(candidate.2016.summary.small$cand.group),
     name = NULL) +
   scale_fill_manual(values = c("lightcoral","light blue","dark grey"))
 poll.2016.compare.vis.defs
@@ -1047,27 +1061,27 @@ poll.2016.compare.vis.defs
 ## Comparing the definite poll voters with the final result
 
 # Comparing polls of ALL with results
-poll.2012.compare.vis.all = ggplot(poll.summary.2012.nounds, aes(x = cand.group, y = diff.from.polls, fill = cand.group, group = 1)) +
-  # geom_line(stat = "identity",show.legend = F, aes(y = df.elections.summary.2016$polls.nov)) +
-  geom_bar(stat = "identity", show.legend = F) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  coord_cartesian(ylim = c(-6,6)) +
-  scale_y_continuous(
-    name =
-      "The % difference between all voter polls\n and the final result of the 2012 presidential election."
-  ) +
-  scale_x_discrete(
-    limit =  poll.summary.2012.nounds$cand.group,
-    labels = as.character(poll.summary.2012.nounds$cand.group),
-    name = NULL) +
-  scale_fill_manual(values = c("light blue","lightcoral","dark grey"))
-poll.2012.compare.vis.all
+# poll.2012.compare.vis.all = ggplot(poll.summary.2012.nounds, aes(x = cand.group, y = diff.from.polls, fill = cand.group, group = 1)) +
+#   # geom_line(stat = "identity",show.legend = F, aes(y = elections.100.years.summary.2016$polls.nov)) +
+#   geom_bar(stat = "identity", show.legend = F) +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+#   coord_cartesian(ylim = c(-6,6)) +
+#   scale_y_continuous(
+#     name =
+#       "The % difference between all voter polls\n and the final result of the 2012 presidential election."
+#   ) +
+#   scale_x_discrete(
+#     limit =  poll.summary.2012.nounds$cand.group,
+#     labels = as.character(poll.summary.2012.nounds$cand.group),
+#     name = NULL) +
+#   scale_fill_manual(values = c("light blue","lightcoral","dark grey"))
+# poll.2012.compare.vis.all
 
 
 # Comparing polls of decideds with results
 # This shows that the polls of the decided votes can be off by 3% ish
 poll.2012.compare.vis.defs = ggplot(poll.summary.2012.nounds, aes(x = cand.group, y = diff.from.polls.defs, fill = cand.group, group = 1)) +
-  # geom_line(stat = "identity",show.legend = F, aes(y = df.elections.summary.2016$polls.nov)) +
+  # geom_line(stat = "identity",show.legend = F, aes(y = elections.100.years.summary.2016$polls.nov)) +
   geom_bar(stat = "identity", show.legend = F) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   coord_cartesian(ylim = c(-5,5)) +
@@ -1100,7 +1114,7 @@ compare.2016.2012.polls
 
 # This graphs shows that the swing from the previous election in terms of democrat to republican
 # was not significant
-historical.election.data.swing = ggplot(df.elections.postwar,
+historical.election.data.swing = ggplot(elections.100.years.postwar,
                                   aes(
                                     x = year,
                                     y = swing.vote.perc,
@@ -1109,7 +1123,7 @@ historical.election.data.swing = ggplot(df.elections.postwar,
                                   )) +
   geom_bar(stat = "identity") +
   geom_line(
-    aes(y = df.elections.postwar$swing.turnout.perc),
+    aes(y = elections.100.years.postwar$swing.turnout.perc),
     alpha = 0.5,
     stat = "identity",
     colour = "black"
@@ -1121,16 +1135,16 @@ historical.election.data.swing = ggplot(df.elections.postwar,
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   annotate(
     "text",
-    x = mean(df.elections.postwar$year),
-    y = min(df.elections.postwar$swing.vote.perc),
+    x = mean(elections.100.years.postwar$year),
+    y = min(elections.100.years.postwar$swing.vote.perc),
     label = "Vote swing towards Democrats",
     vjust = 1,
     hjust = 0.5
   ) +
   annotate(
     "text",
-    x = mean(df.elections.postwar$year),
-    y = max(df.elections.postwar$swing.vote.perc),
+    x = mean(elections.100.years.postwar$year),
+    y = max(elections.100.years.postwar$swing.vote.perc),
     label = "Vote swing towards Republicans",
     vjust = 1,
     hjust = 0.5
@@ -1141,7 +1155,7 @@ historical.election.data.swing
 ## The swing is within historical limits, but perhaps the bigger story is the 'other' vote
 
 # Change in Dem votes compared to last election with turnout swing line
-historical.election.data.dem.votes = ggplot(df.elections.postwar,
+historical.election.data.dem.votes = ggplot(elections.100.years.postwar,
                                   aes(
                                     x = year,
                                     y = dem.vote.perc,
@@ -1150,7 +1164,7 @@ historical.election.data.dem.votes = ggplot(df.elections.postwar,
                                   )) +
   geom_bar(stat = "identity") +
   geom_line(
-    aes(y = df.elections.postwar$turnout.perc),
+    aes(y = elections.100.years.postwar$turnout.perc),
     alpha = 0.5,
     stat = "identity",
     colour = "black"
@@ -1174,55 +1188,44 @@ historical.election.data.dem.votes
 # So, other has 100 - (47.2 + 47.9) = 4.9%. Therefore, Wisconsin other vote is higher than average (6.26%).
 # Also, the other vote was higher than what the polls predicted by about 1 %.
 
-historical.election.data.dem.votes.num = ggplot(df.elections.postwar,
-                                            aes(
-                                              x = year,
-                                              y = dem.vote,
-                                              fill = winner,
-                                              group = 1
-                                            )) +
-  geom_bar(stat = "identity") +
-  geom_line(
-    aes(y = df.elections.postwar$turnout),
-    alpha = 0.5,
-    stat = "identity",
-    colour = "black"
-  ) +
+
+# Overall voter numbers
+historical.election.data.dem.votes.num = ggplot(elections.100.years.postwar,
+                                                aes(
+                                                  x = year,
+                                                  y = dem.vote
+                                                )) +
+  geom_bar(stat = "identity", aes(fill = winner)) +
   geom_bar(stat = "identity",fill = "grey", show.legend = FALSE,
            aes(y = oth.vote)
   ) +
+  geom_line(
+    aes(y = elections.100.years.postwar$turnout),group = 1
+  ) +
+
   scale_y_continuous(
-    name = "Democrat votes with time (no. of voters). Line indicates % turnout.") +
+    name = "Democrat plus other votes with time (no. of voters).\nLine indicates % turnout."
+  ) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_x_continuous(breaks = seq(1948,2016,4)) +
   scale_fill_manual(values = c("light blue", "lightcoral"))
 historical.election.data.dem.votes.num
 
 # Comparing by county 2016 -------------------------------------------------------------
-## VISUALISING THE 2016 RESULTS
-county.summary.compare = subset(historical.counties, year == 2016)
-county.summary.df = county.summary.df[order(county.summary.df$county), ]
-added.columns = county.summary.compare[,24:32]
-county.summary.df = cbind(county.summary.df, added.columns)
-
-county.summary.df$total.voters.age.est= as.integer(county.summary.df$total.voters.age.est)
-county.summary.df.5000 = subset(county.summary.df, total.voters.age.est > 5000)
-
-county.summary.df = county.summary.df[order(county.summary.df$dem.votes.perc), ]
-county.summary.df$ordered.county.2016.dem.votes.perc = c(1:length(county.summary.df$dem.votes.perc))
-
+county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$dem.votes.perc), ]
+county.2016.vs.2012$ordered.county.2016.dem.votes.perc = c(1:length(county.2016.vs.2012$dem.votes.perc))
 
 # Visualising votes for clinton by county and by turnout. Turnout does not seem to differ drastically according to
 # Republican won or Clinton won county
 county.perc.winner = ggplot(
-  county.summary.df,
+  county.2016.vs.2012,
   aes(
-    x = county.summary.df$ordered.county.2016.dem.votes.perc,
+    x = county.2016.vs.2012$ordered.county.2016.dem.votes.perc,
     y = dem.votes.perc,
     fill = winner
   )) +
   geom_bar(
-    aes(y = county.summary.df$turnout.perc.allage.est ),
+    aes(y = county.2016.vs.2012$turnout.perc.allage.est ),
     stat = "identity",
     fill = "grey"
   ) +
@@ -1231,8 +1234,8 @@ county.perc.winner = ggplot(
   paste("Percentage vote for Clinton in Wisconsin counties.\nGrey bar behind indicates percentage turnout")) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_x_discrete(
-    limit =  county.summary.df$ordered.county.2016.dem.votes.perc,
-    labels = as.character(county.summary.df$county),
+    limit =  county.2016.vs.2012$ordered.county.2016.dem.votes.perc,
+    labels = as.character(county.2016.vs.2012$county),
     name = NULL
   ) +
   scale_fill_manual(values = c("light blue", "lightcoral"))
@@ -1241,7 +1244,7 @@ county.perc.winner
 # Visualising votes for clinton against other.
 # Counties closest to middle most likely to vote other
 county.perc.oth.vs.dem = ggplot(
-  county.summary.df.5000,
+  county.2016.vs.2012.5000,
   aes(
     x = oth.votes.perc,
     y = dem.votes.perc,
@@ -1256,7 +1259,7 @@ county.perc.oth.vs.dem = ggplot(
 # Visualising votes for other against turnout
 # Votes for other parties was pretty consistent regardless of being mostly dem or mostly republican
 county.perc.turnout.other = ggplot(
-  county.summary.df.5000,
+  county.2016.vs.2012.5000,
   aes(
     x = turnout.perc.allage.est,
     y = oth.votes.perc,
@@ -1274,7 +1277,7 @@ county.perc.turnout.other
 # Visualising votes for other against turnout
 # Votes for other parties was pretty consistent regardless of being mostly dem or mostly republican
 county.num.turnout.other = ggplot(
-  county.summary.df,
+  county.2016.vs.2012,
   aes(
     x = log10(turnout),
     y = use.machines.prop,
@@ -1292,7 +1295,7 @@ county.num.turnout.other
 # Visualising votes for other against percentage machines
 # Votes for other parties was pretty consistent regardless of the proportion of machines
 county.perc.machines.other = ggplot(
-  county.summary.df,
+  county.2016.vs.2012,
   aes(
     x = use.machines.prop,
     y = oth.votes.perc,
@@ -1310,7 +1313,7 @@ county.perc.machines.other
 # Visualising votes for other against percentage machines
 # Votes for other parties in total amount seemed to be higher in 100% machine states
 county.perc.winner = ggplot(
-  county.summary.df,
+  county.2016.vs.2012,
   aes(
     x = use.machines.prop,
     y = oth.votes,
@@ -1328,15 +1331,15 @@ county.perc.winner
 
 
 
-county.summary.join = county.summary.df[c(2,9,23,32:39)]
-voting.df.2016.joined = join(voting.df.2016,county.summary.join,by="county")
+county.summary.join = county.2016.vs.2012[c(2,9,23,32:39)]
+voting.bycandcounty.2016.joined = join(voting.bycandcounty.2016,county.summary.join,by="county")
 
-voting.df.2016.joined.johnson = subset(voting.df.2016.joined, cand == "Gary Johnson")
+voting.bycandcounty.2016.joined.johnson = subset(voting.bycandcounty.2016.joined, cand == "Gary Johnson")
 
 # Visualising votes for johnson against percentage machines
 # Votes for johnson in total amount seemed to be higher in 100% machine states
 county.perc.winner = ggplot(
-  voting.df.2016.joined.johnson,
+  voting.bycandcounty.2016.joined.johnson,
   aes(
     x = use.machines.prop,
     y = votes.perc
@@ -1350,12 +1353,12 @@ county.perc.winner = ggplot(
   scale_fill_manual(values = c("light blue","lightcoral"))
 county.perc.winner
 
-correlation(voting.df.2016.joined.johnson$use.machines.prop,voting.df.2016.joined.johnson$votes.perc)
+correlation(voting.bycandcounty.2016.joined.johnson$use.machines.prop,voting.bycandcounty.2016.joined.johnson$votes.perc)
 
 # Visualising votes for johnson against turnout
 # Votes for other parties in total amount seemed to be higher in 100% machine states
 county.perc.winner = ggplot(
-  voting.df.2016.joined.johnson,
+  voting.bycandcounty.2016.joined.johnson,
   aes(
     x = turnout.perc.allage.est,
     y = votes.perc
@@ -1370,21 +1373,21 @@ county.perc.winner = ggplot(
 county.perc.winner
 
 
-county.summary.df = county.summary.df[order(county.summary.df$turnout.perc.allage.est), ]
-county.summary.df$ordered.county.2016.turnout.perc.diff = c(1:length(county.summary.df$turnout.perc.allage.est))
+county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$turnout.perc.allage.est), ]
+county.2016.vs.2012$ordered.county.2016.turnout.perc.diff = c(1:length(county.2016.vs.2012$turnout.perc.allage.est))
 
 # Visualise county turnout data as percentage
 county.perc.turnout.winner = ggplot(
-  county.summary.df,
+  county.2016.vs.2012,
   aes(x = ordered.county.2016.turnout.perc.diff, y = turnout.perc.allage.est,
       fill = winner), group = 1
 ) +
   geom_bar(stat = "identity") + scale_y_continuous(name = "Estimated turnout in Trump and Clinton won counties.") +
-  geom_line(aes(y = df.elections.summary.2016$turnout.perc), linetype = 3) +
+  geom_line(aes(y = elections.100.years.summary.2016$turnout.perc), linetype = 3) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_x_discrete(
-    limit =  county.summary.df$ordered.county.2016.turnout.perc.diff,
-    labels = as.character(county.summary.df$county),
+    limit =  county.2016.vs.2012$ordered.county.2016.turnout.perc.diff,
+    labels = as.character(county.2016.vs.2012$county),
     name = NULL
   ) +
   scale_fill_manual(values = c("light blue", "lightcoral"))
@@ -1393,36 +1396,36 @@ county.perc.turnout.winner
 
 
 ## VISUALISING THE 2016 RESULTS
-county.summary.df = county.summary.df[order(county.summary.df$perc.diff), ]
-county.summary.df$ordered.county.2016.perc.diff = c(1:length(county.summary.df$perc.diff))
+county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$perc.diff), ]
+county.2016.vs.2012$ordered.county.2016.perc.diff = c(1:length(county.2016.vs.2012$perc.diff))
 
 # Absolute differece in votes as percentage
-county.perc.diff = ggplot(county.summary.df,
+county.perc.diff = ggplot(county.2016.vs.2012,
                           aes(x = ordered.county.2016.perc.diff, y = perc.diff,
                               fill = winner)) +
   geom_bar(stat = "identity") + scale_y_continuous(name = "Percentage difference in vote between Trump and Clinton by county.") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_x_discrete(
-    limit =  county.summary.df$ordered.county.2016.perc.diff,
-    labels = as.character(county.summary.df$county),
+    limit =  county.2016.vs.2012$ordered.county.2016.perc.diff,
+    labels = as.character(county.2016.vs.2012$county),
     name = NULL
   ) +
   scale_fill_manual(values = c("light blue", "lightcoral"))
 county.perc.diff
 
-county.summary.df = county.summary.df[order(county.summary.df$turnout), ]
-county.summary.df$ordered.county.2016.turnout = c(1:length(county.summary.df$turnout))
+county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$turnout), ]
+county.2016.vs.2012$ordered.county.2016.turnout = c(1:length(county.2016.vs.2012$turnout))
 
 
 
 
 # Votes as numbers
-county.2016.trump.num = ggplot(county.summary.df,
+county.2016.trump.num = ggplot(county.2016.vs.2012,
                                aes(x = ordered.county.2016.turnout, y = rep.votes,
                                    fill = winner)) +
   geom_bar(
     stat = "identity",
-    aes(y = county.summary.df$turnout),
+    aes(y = county.2016.vs.2012$turnout),
     fill = "grey",
     alpha = 0.5
   ) +
@@ -1430,8 +1433,8 @@ county.2016.trump.num = ggplot(county.summary.df,
   scale_y_continuous(name = "Number of votes for Trump by county, over turnout per county.") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_x_discrete(
-    limit =  county.summary.df$ordered.county.2016.turnout,
-    labels = as.character(county.summary.df$county),
+    limit =  county.2016.vs.2012$ordered.county.2016.turnout,
+    labels = as.character(county.2016.vs.2012$county),
     name = NULL
   ) +
   scale_fill_manual(values = c("light blue", "lightcoral"))
@@ -1452,14 +1455,14 @@ votes.2016.compare
 
 # Visualising county data 2012 vs 2016
 {
-  county.summary.df = county.summary.df[order(county.summary.df$diff.2012.perc), ]
-  county.summary.df$ordered.county.2012.perc.diff = c(1:length(county.summary.df$diff.2012.perc))
+  county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$diff.2012.perc), ]
+  county.2016.vs.2012$ordered.county.2012.perc.diff = c(1:length(county.2016.vs.2012$diff.2012.perc))
 
-county.2012v2016.perc.diff.2016ord = ggplot(county.summary.df,
+county.2012v2016.perc.diff.2016ord = ggplot(county.2016.vs.2012,
                                             aes(x = ordered.county.2016.perc.diff, y = diff.2012.perc)) +
   geom_bar(stat = "identity") + geom_bar(
     stat = "identity",
-    aes(y = county.summary.df$perc.diff),
+    aes(y = county.2016.vs.2012$perc.diff),
     fill = "red",
     alpha = 0.5
   ) +
@@ -1468,19 +1471,19 @@ county.2012v2016.perc.diff.2016ord = ggplot(county.summary.df,
   ) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_x_discrete(
-    limit =  county.summary.df$ordered.county.2012.perc.diff,
-    labels = as.character(county.summary.df$county),
+    limit =  county.2016.vs.2012$ordered.county.2012.perc.diff,
+    labels = as.character(county.2016.vs.2012$county),
     name = NULL
   ) +
   scale_fill_manual(values = c("light blue", "lightcoral"))
 county.2012v2016.perc.diff.2016ord
 
 # As number instead of percentage
-county.differences.years.num = ggplot(county.summary.df,
+county.differences.years.num = ggplot(county.2016.vs.2012,
                                       aes(x = ordered.county.2012.perc.diff, y = diff.2012.num)) +
   geom_bar(stat = "identity") + geom_bar(
     stat = "identity",
-    aes(y = county.summary.df$num.diff),
+    aes(y = county.2016.vs.2012$num.diff),
     fill = "red",
     alpha = 0.5
   ) +
@@ -1489,8 +1492,8 @@ county.differences.years.num = ggplot(county.summary.df,
   ) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_x_discrete(
-    limit =  county.summary.df$ordered.county.2012.perc.diff,
-    labels = as.character(county.summary.df$county),
+    limit =  county.2016.vs.2012$ordered.county.2012.perc.diff,
+    labels = as.character(county.2016.vs.2012$county),
     name = NULL
   ) +
   scale_fill_manual(values = c("light blue", "lightcoral"))
@@ -1639,44 +1642,44 @@ swing.turnout.2016.2012.compare
 }
 
 # Looking at County data through time -------------------------------------
-historical.counties = historical.counties[order(historical.counties$turnout), ]
-historical.counties$ordered.turnout = c(1:length(historical.counties$year))
+counties.2000.2016 = counties.2000.2016[order(counties.2000.2016$turnout), ]
+counties.2000.2016$ordered.turnout = c(1:length(counties.2000.2016$year))
 
-turnout.diff.num.graph = ggplot(historical.counties,
+turnout.diff.num.graph = ggplot(counties.2000.2016,
                                 aes(x = year, y = turnout, fill = winning.party)) +
   geom_bar(stat = "identity") +
   scale_y_continuous(name = "Overall turnout with time in counties per winning party.") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   # scale_x_discrete(
-  #   limit =  historical.counties$ordered.turnout,
-  #   labels = as.character(historical.counties$year),
+  #   limit =  counties.2000.2016$ordered.turnout,
+  #   labels = as.character(counties.2000.2016$year),
   #   name = NULL
   # ) +
   scale_fill_manual(values = c("light blue", "lightcoral"))
 turnout.diff.num.graph
 
-turnout.diff.num.graph = ggplot(historical.counties,
+turnout.diff.num.graph = ggplot(counties.2000.2016,
                                 aes(x = year, y = turnout, fill = winning.party)) +
   geom_bar(stat = "identity") +
   scale_y_continuous(name = "Overall turnout with time in counties per winning party.") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   # scale_x_discrete(
-  #   limit =  historical.counties$ordered.turnout,
-  #   labels = as.character(historical.counties$year),
+  #   limit =  counties.2000.2016$ordered.turnout,
+  #   labels = as.character(counties.2000.2016$year),
   #   name = NULL
   # ) +
   facet_wrap(~mostly.dem)
   scale_fill_manual(values = c("light blue", "lightcoral"))
 turnout.diff.num.graph
 
-turnout.diff.num.turnout.graph = ggplot(historical.counties,
+turnout.diff.num.turnout.graph = ggplot(counties.2000.2016,
                                 aes(x = year, y = turnout, fill = winning.party)) +
   geom_bar(stat = "identity") +
   scale_y_continuous(name = "Overall turnout with time in counties per winning party.") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   # scale_x_discrete(
-  #   limit =  historical.counties$ordered.turnout,
-  #   labels = as.character(historical.counties$year),
+  #   limit =  counties.2000.2016$ordered.turnout,
+  #   labels = as.character(counties.2000.2016$year),
   #   name = NULL
   # ) +
   facet_wrap(~most.turnout.drop)
@@ -1684,15 +1687,15 @@ scale_fill_manual(values = c("light blue", "lightcoral"))
 turnout.diff.num.turnout.graph
 
 
-turnout.diff.num.graph = ggplot(historical.counties,
+turnout.diff.num.graph = ggplot(counties.2000.2016,
                                 aes(x = year, y = turnout, colour = winning.party,
                                     group = county)) +
   geom_line(stat = "identity") +
   scale_y_continuous(name = "Overall turnout with time by winning party.") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   # scale_x_discrete(
-  #   limit =  historical.counties$ordered.turnout,
-  #   labels = as.character(historical.counties$year),
+  #   limit =  counties.2000.2016$ordered.turnout,
+  #   labels = as.character(counties.2000.2016$year),
   #   name = NULL
   # ) +
   facet_wrap(~mostly.dem)
@@ -1700,30 +1703,30 @@ turnout.diff.num.graph = ggplot(historical.counties,
 turnout.diff.num.graph
 
 
-historical.dem.vote.perc.graph = ggplot(historical.counties,
+historical.dem.vote.perc.graph = ggplot(counties.2000.2016,
                                 aes(x = year, y = dem.vote.perc, colour = winning.party,
                                     group = county)) +
   geom_line(stat = "identity") +
   scale_y_continuous(name = "Overall dem.vote.perc with time by winning party.") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   # scale_x_discrete(
-  #   limit =  historical.counties$ordered.dem.vote.perc,
-  #   labels = as.character(historical.counties$year),
+  #   limit =  counties.2000.2016$ordered.dem.vote.perc,
+  #   labels = as.character(counties.2000.2016$year),
   #   name = NULL
   # ) +
   facet_wrap(~mostly.dem)
 scale_fill_manual(values = c("lightcoral", "light blue"))
 historical.dem.vote.perc.graph
 
-historical.dem.vote.perc.graph = ggplot(historical.counties,
+historical.dem.vote.perc.graph = ggplot(counties.2000.2016,
                                         aes(x = year, y = dem.vote.perc, colour = winning.party,
                                             group = county)) +
   geom_line(stat = "identity") +
   scale_y_continuous(name = "Overall dem.vote.perc with time by winning party.") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   # scale_x_discrete(
-  #   limit =  historical.counties$ordered.dem.vote.perc,
-  #   labels = as.character(historical.counties$year),
+  #   limit =  counties.2000.2016$ordered.dem.vote.perc,
+  #   labels = as.character(counties.2000.2016$year),
   #   name = NULL
   # ) +
   facet_wrap(~most.turnout.drop)
@@ -1732,30 +1735,30 @@ historical.dem.vote.perc.graph
 
 ### Other votes
 
-historical.oth.vote.perc.graph = ggplot(historical.counties,
+historical.oth.vote.perc.graph = ggplot(counties.2000.2016,
                                         aes(x = year, y = oth.vote.perc, colour = winning.party,
                                             group = county)) +
   geom_line(stat = "identity") +
   scale_y_continuous(name = "Overall oth.vote.perc with time by winning party.") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   # scale_x_discrete(
-  #   limit =  historical.counties$ordered.oth.vote.perc,
-  #   labels = as.character(historical.counties$year),
+  #   limit =  counties.2000.2016$ordered.oth.vote.perc,
+  #   labels = as.character(counties.2000.2016$year),
   #   name = NULL
   # ) +
   facet_wrap(~most.turnout.drop)
 scale_fill_manual(values = c("lightcoral", "light blue"))
 historical.oth.vote.perc.graph
 
-historical.oth.vote.perc.graph = ggplot(historical.counties,
+historical.oth.vote.perc.graph = ggplot(counties.2000.2016,
                                         aes(x = year, y = oth.vote.perc, colour = winning.party,
                                             group = county)) +
   geom_line(stat = "identity") +
   scale_y_continuous(name = "Overall oth.vote.perc with time by winning party.") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   # scale_x_discrete(
-  #   limit =  historical.counties$ordered.oth.vote.perc,
-  #   labels = as.character(historical.counties$year),
+  #   limit =  counties.2000.2016$ordered.oth.vote.perc,
+  #   labels = as.character(counties.2000.2016$year),
   #   name = NULL
   # ) +
   facet_wrap(~mostly.dem)
@@ -1763,30 +1766,30 @@ scale_fill_manual(values = c("lightcoral", "light blue"))
 historical.oth.vote.perc.graph
 
 # Other numbers
-historical.oth.vote.perc.graph = ggplot(historical.counties,
+historical.oth.vote.perc.graph = ggplot(counties.2000.2016,
                                         aes(x = year, y = oth.vote, colour = winning.party,
                                             group = county)) +
   geom_line(stat = "identity") +
   scale_y_continuous(name = "Overall oth.vote.perc with time by winning party.") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   # scale_x_discrete(
-  #   limit =  historical.counties$ordered.oth.vote.perc,
-  #   labels = as.character(historical.counties$year),
+  #   limit =  counties.2000.2016$ordered.oth.vote.perc,
+  #   labels = as.character(counties.2000.2016$year),
   #   name = NULL
   # ) +
   facet_wrap(~mostly.dem)
 scale_fill_manual(values = c("lightcoral", "light blue"))
 historical.oth.vote.perc.graph
 
-historical.oth.vote.perc.graph = ggplot(historical.counties,
+historical.oth.vote.perc.graph = ggplot(counties.2000.2016,
                                         aes(x = year, y = oth.vote.perc, colour = winning.party,
                                             group = county)) +
   geom_line(stat = "identity") +
   scale_y_continuous(name = "Overall oth.vote.perc with time by winning party.") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   # scale_x_discrete(
-  #   limit =  historical.counties$ordered.oth.vote.perc,
-  #   labels = as.character(historical.counties$year),
+  #   limit =  counties.2000.2016$ordered.oth.vote.perc,
+  #   labels = as.character(counties.2000.2016$year),
   #   name = NULL
   # ) +
   facet_wrap(~all.machines)

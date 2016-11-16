@@ -2,64 +2,302 @@
 title: "Analysis of the 2016 Wisconsin vote"
 author: "Sean Case"
 date: "15 November 2016"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
+  word_document:
+    fig_caption: yes
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-Information on how to use Plotly can be found here: https://www.r-bloggers.com/plot-with-ggplot2-and-plotly-within-knitr-reports/
-```{r setupeverything, echo = FALSE}
+
+require(ggplot2); library(plotly);require(devtools); library(XML); require(rvest); require(stringr);require(xlsx);require(dplyr);require(plyr)
+require(agricolae); require(ggplot2); library(gridExtra); library(tidyr)
+
+default.margin = list(l = 100, r = 80, b = 80, t = 20, pad = 4)
+colours = c("grey", "lightcoral", "dark grey", "light blue", "light green","grey","grey")
+
 library(plotly)
 py <- plot_ly(username="SeanCase", key="••••••••••")
 
 setwd("C:\\Users\\s_cas\\Dropbox\\Perso\\2016 voting election county results\\Wisconsin")
 
-county.summary.df = read.csv("county.summary.df.csv")
-historical.counties = read.csv("historical.counties.csv")
+candidate.2016.summary = read.csv("candidate.2016.summary.csv")
+counties.2016.bycand = read.csv("counties.2016.bycand.csv")
+county.2016.vs.2012 = read.csv("county.2016.vs.2012.csv")
+counties.2000.2016 = read.csv("counties.2000.2016.csv")
+elections.100.years = read.csv("elections.100.years.csv")
 all_polls_2012 = read.csv("all_polls_2012.csv")
 all_polls_2016 = read.csv("all_polls_2016.csv")
 selected_polls_2012.sub = read.csv("selected_polls_2012.sub.csv")
 selected_polls_2016.sub = read.csv("selected_polls_2016.sub.csv")
-df.elections = read.csv("df.elections.csv")
 
-df.elections.summary.2016 = subset(df.elections, year == 2016)
-df.elections.postwar = subset(df.elections, year >= 1948)
+elections.100.years.summary.2016 = subset(elections.100.years, year == 2016)
+elections.100.years.postwar = subset(elections.100.years, year >= 1948)
 
-default.margin = list(l = 100, r = 80, b = 80, t = 20, pad = 4)
+## Comparing the definite poll voters with the final result
+poll.summary.2016 = data.frame(c(1:4))
+poll.summary.2016$cand.group = c("Donald J. Trump", "Hillary Clinton", "Other","Undecided")
+poll.summary.2016$polls.nov = with(selected_polls_2016.sub,
+                                   c(mean(trump),mean(clinton),mean(other),mean(undecided,na.rm=T)))
+poll.summary.2016$c.1.4. = NULL
+poll.summary.2016$polls.nov.def = with(elections.100.years.summary.2016, c(mean.rep.poll.oneweek.defs, mean.dem.poll.oneweek.defs, mean.oth.poll.oneweek.defs,NA))
+
+candidate.2016.summary$polls.nov = with(poll.summary.2016, c(polls.nov[1], polls.nov[2], rep(polls.nov[3],5)))
+candidate.2016.summary$polls.nov.def = with(poll.summary.2016, c(polls.nov.def[1], polls.nov.def[2], rep(polls.nov.def[3],5)))
+
+candidate.2016.summary$diff.from.poll = candidate.2016.summary$votes.perc.group - candidate.2016.summary$polls.nov
+candidate.2016.summary$diff.from.poll.defs = candidate.2016.summary$votes.perc.group - candidate.2016.summary$polls.nov.def
+
+
+### 2012 results ###
+elections.100.years.summary.2012 = elections.100.years.postwar[2,]
+
+poll.summary.2012 = data.frame(c(1:4))
+poll.summary.2012$cand.group = c("Mitt Romney", "Barack Obama", "Other","Undecided")
+poll.summary.2012$polls.nov = with(selected_polls_2012.sub,
+                                   c(mean(romney),mean(obama),mean(other,na.rm=T),mean(undecided,na.rm=T)))
+poll.summary.2012$c.1.4. = NULL
+poll.summary.2012$polls.nov.def = with(elections.100.years.summary.2012, c(mean.rep.poll.oneweek.defs, mean.dem.poll.oneweek.defs, mean.oth.poll.oneweek.defs,NA))
+
+poll.summary.2012$vote = with(elections.100.years.summary.2012, c(rep.vote, dem.vote, oth.vote,NA))
+poll.summary.2012$vote.perc = with(elections.100.years.summary.2012, c(rep.vote.perc, dem.vote.perc, oth.vote.perc,NA))
+
+poll.summary.2012$diff.from.polls = with(poll.summary.2012, vote.perc - polls.nov)
+poll.summary.2012$diff.from.polls.defs = with(poll.summary.2012, vote.perc - polls.nov.def)
+
+poll.summary.2012.nounds = poll.summary.2012[1:3,]
+
+## VISUALISING THE 2016 RESULTS
+county.summary.compare = subset(counties.2000.2016, year == 2016)
+county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$county), ]
+added.columns = county.summary.compare[,20:28]
+county.2016.vs.2012 = cbind(county.2016.vs.2012, added.columns)
+
+county.2016.vs.2012$total.voters.age.est= as.integer(county.2016.vs.2012$total.voters.age.est)
+county.2016.vs.2012.5000 = subset(county.2016.vs.2012, total.voters.age.est > 5000)
+
+```
+# Introduction
+The 2016 Presidential election surprised many with unexpected results in many states that ran counter to the polls, and counter to recent trends in these states. Specifically, the previously-thought 'safe' states of Wisconsin, Michigan, and Pennsylvania switched from Democrat to Republican, and were key to clinching the victory for Trump.
+
+Concern has surfaced by those close to the events of election night, specifically that the USA was under attack from hackers during November 8. Some feared that hacking may have had some influence on the election, especially in areas where voting machines are in use. Since the result in Wisconsin was so close, and the result so unexpected (at least judging by the polls close to election day), I decided to use my R skills to try to look deeper into the Wisconsin results. 
+
+Were the results really so unexpected? Did the results deviate significantly from the polling, or from previous elections? Did the presence of voting machines in polling stations affect the result in any way?
+
+# State level analysis
+## In Wisconsin, the results did not deviate greatly from the national vote
+
+Nationally, 47.2% voted for Trump vs 47.9% for Clinton nationally, leaving other candidates with 4.9% (uselectionatlas.org). In Wisconsin (with 95% votes counted at time of writing), Donald Trump won with 47.9% of the vote compared to the 46.9% of Clinton, a difference of only ~27,000 votes. The majority of 'other' voters went for Gary Johnson (3.6 of the 5.1% who voted 'other' in Wisconsin), and Jill Stein received just over 1%, both close to their national averages. 
+
+So far, nothing strange. 
+
+## The polls were off, but slightly
+
+I downloaded the data from the 2016 polls in Wisconsin for 2016 from the HuffPost Pollster API, and subset it to looking only at polls started 7 days before the election or later. Focusing on decided voters only, Clinton underperformed on election day (2.7% lower than poll expectations), Trump overperformed (+2.1%), while 'Others' slightly overperformed (+0.6%). This means that more of the 'undecideds' went to Trump, or that many potential Clinton supporters chose not to turn up.
+
+```{r 2016resultsvspolls, echo=FALSE, fig.cap= "Percentage votes for the candidates.Lines indicate polling of decided voters,excluding those who were unsure."}
+
+candidate.2016.summary.vis.defs = ggplot(candidate.2016.summary,
+                                            aes(x = ordered.cands, y = votes.perc, fill = cand,group=1)) +
+  geom_bar(stat = "identity") +
+  geom_line(stat = "identity",
+            aes(y = elections.100.years.summary.2016$mean.dem.poll.oneweek.defs),
+            colour = "blue", linetype = 2,
+            show.legend = F) +
+  geom_line(stat = "identity",
+            aes(y = elections.100.years.summary.2016$mean.rep.poll.oneweek.defs),
+            colour = "red", linetype = 2,
+            show.legend = F) +
+  geom_line(stat = "identity",
+            aes(y = elections.100.years.summary.2016$mean.oth.poll.oneweek.defs),
+            colour = "black", linetype = 2,
+            show.legend = F) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none") +
+  scale_y_continuous(
+    name =
+      "Bars: Votes for the candidates (%). Lines: polling of decided voters (%)."
+  ) +
+  scale_x_discrete(
+    limit =  candidate.2016.summary$ordered.cands,
+    labels = as.character(candidate.2016.summary$cand),
+    name = NULL) +
+  scale_fill_manual(values = colours)
+candidate.2016.summary.vis.defs
+
+# ggplotly(candidate.2016.summary.vis.defs, session = "knitr", width = 800, height = 600) %>% 
+#   layout(bargap = 3, autosize=T, margin = default.margin) # l, r, b, t, pad
+
 ```
 
-## Including Plots
+Were the polls particularly innaccurate in Wisconsin in 2016? I compared these polls with those from 2012, focusing again on polls started 7 days before election day. The polls show that deviations from the polling expectations were also close to 3%. So the deviations we see in 2016 are nothing out of line.
 
-Test plot embed
+```{r resultsvspolls2012and2016, echo=FALSE, fig.cap="The % difference between definite voter polls and the final result of the 2016 presidential election"}
+candidate.2016.summary.small = subset(candidate.2016.summary, votes.rec > 100000)
 
-```{r pressure, echo=FALSE}
-
-# Overall voter numbers
-historical.election.data.dem.votes.num = ggplot(df.elections.postwar,
-                                            aes(
-                                              x = year,
-                                              y = dem.vote
-                                              )) +
-    geom_bar(stat = "identity",fill = "grey", show.legend = FALSE,
-           aes(y = oth.vote)
-  ) +
-  geom_bar(stat = "identity", aes(fill = winner)) +
-  geom_line(
-    aes(y = df.elections.postwar$turnout),group = 1
-  ) +
-
+poll.2016.compare.vis.defs = ggplot(candidate.2016.summary.small, aes(x = cand.group, y = diff.from.poll.defs, fill = cand.group, group = 1)) +
+  # geom_line(stat = "identity",show.legend = F, aes(y = elections.100.years.summary.2016$polls.nov)) +
+  geom_bar(stat = "identity", show.legend = F) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_cartesian(ylim = c(-5,5)) +
   scale_y_continuous(
-    name = "Democrat plus other votes with time (no. of voters).<br>Line indicates % turnout."
+    name =
+      "Deviance between polls and election outcomes (%)."
   ) +
+  scale_x_discrete(
+    limit =  candidate.2016.summary.small$cand.group,
+    labels = as.character(candidate.2016.summary.small$cand.group),
+    name = NULL) +
+  scale_fill_manual(values = c("lightcoral","light blue","dark grey"))
+# poll.2016.compare.vis.defs
+
+poll.2012.compare.vis.defs = ggplot(poll.summary.2012.nounds, aes(x = cand.group, y = diff.from.polls.defs, fill = cand.group, group = 1)) +
+  # geom_line(stat = "identity",show.legend = F, aes(y = elections.100.years.summary.2016$polls.nov)) +
+  geom_bar(stat = "identity", show.legend = F) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_cartesian(ylim = c(-5,5)) +
+  scale_y_continuous(
+    name =
+      "Same for 2012."
+  ) +
+  scale_x_discrete(
+    limit =  poll.summary.2012.nounds$cand.group,
+    labels = as.character(poll.summary.2012.nounds$cand.group),
+    name = NULL) +
+  scale_fill_manual(values = c("light blue","lightcoral","dark grey"))
+# poll.2012.compare.vis.defs
+
+compare.2016.2012.polls.plotnames = c("poll.2016.compare.vis.defs",
+                                      "poll.2012.compare.vis.defs")
+compare.2016.2012.polls = marrangeGrob(
+  grobs = mget(compare.2016.2012.polls.plotnames),
+  nrow = 1,
+  ncol = 2,
+  top = NULL
+)
+compare.2016.2012.polls
+```
+
+## Was Wisconsin 2016 a strange compared to historical trends?
+
+```{r historical.dems.vs.turnout, echo=FALSE, fig.cap="Democrat and other votes with time (%). Grey bars indicate other votes. Line indicates % turnout."}
+
+# Change in Dem votes compared to last election with turnout swing line
+historical.election.data.dem.votes = ggplot(elections.100.years.postwar,
+                                  aes(
+                                    x = year,
+                                    y = dem.vote.perc,
+                                    fill = winner,
+                                    group = 1
+                                  )) +
+  geom_bar(stat = "identity") +
+  geom_line(
+    aes(y = elections.100.years.postwar$turnout.perc),
+    alpha = 0.5,
+    stat = "identity",
+    colour = "black"
+  ) +
+  geom_bar(stat = "identity",fill = "grey", show.legend = FALSE, width = 2,
+           aes(y = oth.vote.perc)
+           ) +
+  scale_y_continuous(
+    name = "Bars: election votes (%). Line: turnout (%)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_x_continuous(breaks = seq(1948,2016,4)) +
   scale_fill_manual(values = c("light blue", "lightcoral"))
-# historical.election.data.dem.votes.num
-  ggplotly(historical.election.data.dem.votes.num, session = "knitr", width = 800, height = 600) %>% 
-  layout(bargap = 3, autosize=T, margin = default.margin) # l, r, b, t, pad
+historical.election.data.dem.votes
+
+  # ggplotly(historical.election.data.dem.votes, session = "knitr", width = 800, height = 600) %>%
+  # layout(bargap = 3, autosize=T, margin = default.margin) # l, r, b, t, pad
   
   # Here's what we can do with the layout function: https://plot.ly/r/reference/#Layout_and_layout_style_objects
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Comparing the 2016 election to those back to 1948, it does not appear that the votes for the Democrats, or turnout, differed significantly from historical trends. The 'other' vote percentage is noticeable, as it is the highest recorded since 1948; However, we have previously noted that this percentage matched the national average.
+
+One other thing to note is that Wisconsin has voted Democrat since 1988, making 2016 the year to break a 7-election trend. Unusual, but nowhere near enough to note anything suspicious.
+
+One other factor we can consider with this data is the % swing in votes or turnout from one election to the next.
+```{r swing.historic, echo=FALSE, fig.cap="Swing vote percentage from previous election with time. The line indicates change in % turnout compared with previous election"}
+historical.election.data.swing = ggplot(elections.100.years.postwar,
+                                  aes(
+                                    x = year,
+                                    y = swing.vote.perc,
+                                    fill = winner,
+                                    group = 1
+                                  )) +
+  geom_bar(stat = "identity") +
+  geom_line(
+    aes(y = elections.100.years.postwar$swing.turnout.perc),
+    alpha = 0.5,
+    stat = "identity",
+    colour = "black"
+  ) +
+  scale_y_continuous(
+    name =
+      "Bars: vote swing (%), Lines: change in turnout (%)"
+    ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  annotate(
+    "text",
+    x = mean(elections.100.years.postwar$year),
+    y = min(elections.100.years.postwar$swing.vote.perc),
+    label = "Vote swing towards Democrats",
+    vjust = 1,
+    hjust = 0.5
+  ) +
+  annotate(
+    "text",
+    x = mean(elections.100.years.postwar$year),
+    y = max(elections.100.years.postwar$swing.vote.perc),
+    label = "Vote swing towards Republicans",
+    vjust = 1,
+    hjust = 0.5
+  ) +
+  scale_fill_manual(values = c("light blue","lightcoral"))
+historical.election.data.swing
+```
+This figure shows that although there was a significant vote swing from Democrats to Republican (~8%), the magnitude of this swing was not large in historical terms. Overall turnout was down by ~3% compared to the previous election.
+
+So far, nothing suspicious. We need to go deeper into the data, so now we go to the county level.
+
+# County level vote analysis
+
+The Wisconsin Elections Commission website (http://elections.wi.gov/) provides county-level voting results back to 2000, as well as additional data about voter population and the municipalities that use voting machines. This data was used for the following analysis.
+
+```{r counties clinton vote turnout, echo=F, fig.cap="Percentage vote for Clinton in Wisconsin counties.\nGrey bar behind indicates percentage turnout"}
+county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$dem.votes.perc), ]
+county.2016.vs.2012$ordered.county.2016.dem.votes.perc = c(1:length(county.2016.vs.2012$dem.votes.perc))
+
+# Visualising votes for clinton by county and by turnout. Turnout does not seem to differ drastically according to
+# Republican won or Clinton won county
+county.perc.winner = ggplot(
+  county.2016.vs.2012,
+  aes(
+    x = county.2016.vs.2012$ordered.county.2016.dem.votes.perc,
+    y = dem.votes.perc,
+    fill = winner
+  )) +
+  geom_bar(
+    aes(y = county.2016.vs.2012$turnout.perc.allage.est ),
+    stat = "identity",
+    fill = "grey"
+  ) +
+  geom_bar(stat = "identity", alpha = 0.6) +
+  scale_y_continuous(name =
+  paste("Blue/red bars: percentage vote Democrats, filled by winner (%). Grey bar: voter turnout (%)")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_x_discrete(
+    limit =  county.2016.vs.2012$ordered.county.2016.dem.votes.perc,
+    labels = as.character(county.2016.vs.2012$county),
+    name = NULL
+  ) +
+  scale_fill_manual(values = c("light blue", "lightcoral"))
+county.perc.winner
+```
+
+
+
+
