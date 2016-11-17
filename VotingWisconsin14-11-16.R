@@ -1,4 +1,4 @@
-setwd("C:\\Users\\s_cas\\Dropbox\\Perso\\2016 voting election county results\\Wisconsin")
+setwd("https://github.com/Sean-Case/WisconsinElection2016")
 library(XML); require(rvest); require(stringr);require(xlsx);require(dplyr);require(plyr)
 require(agricolae); require(ggplot2); library(gridExtra); library(tidyr); require(corrplot)
 
