@@ -267,7 +267,7 @@ So far, nothing suspicious. We need to go deeper into the data, so now we go to 
 
 The Wisconsin Elections Commission website (http://elections.wi.gov/) provides county-level voting results back to 2000, as well as additional data about voter population and the municipalities that use voting machines. This data was used for the following analysis.
 
-```{r counties clinton vote turnout, echo=F, fig.cap="Percentage vote for Clinton in Wisconsin counties.\nGrey bar behind indicates percentage turnout"}
+```{r counties clinton vote turnout, echo=F, fig.cap="Percentage vote for Clinton in Wisconsin counties. Grey bar behind indicates percentage turnout"}
 county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$dem.votes.perc), ]
 county.2016.vs.2012$ordered.county.2016.dem.votes.perc = c(1:length(county.2016.vs.2012$dem.votes.perc))
 
@@ -287,8 +287,8 @@ county.perc.winner = ggplot(
   ) +
   geom_bar(stat = "identity", alpha = 0.6) +
   scale_y_continuous(name =
-  paste("Blue/red bars: percentage vote Democrats, filled by winner (%). Grey bar: voter turnout (%)")) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  paste("Blue/red bars: percentage vote Democrats, filled by winner (%).\nGrey bar: voter turnout (%)")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 4)) +
   scale_x_discrete(
     limit =  county.2016.vs.2012$ordered.county.2016.dem.votes.perc,
     labels = as.character(county.2016.vs.2012$county),
@@ -298,6 +298,90 @@ county.perc.winner = ggplot(
 county.perc.winner
 ```
 
+This figure shows us that 1. there were a lot less counties won by Clinton than Trump, and 2. the counties won by Clinton did not necessarily have a lower turnout.
+
+We can confirm this with a point graph. The following shows that the Clinton vote did not drop with turnout percentage in each county.
+
+```{r clinton v turnout, echo=F, fig.cap="Percentage vote for Clinton in Wisconsin counties against turnout in county."}
+county.perc.turnout.dems = ggplot(
+  county.2016.vs.2012.5000,
+  aes(
+    y = dem.votes.perc,
+    x = turnout.perc.allage.est,
+    colour = winner
+  )
+) +
+  geom_smooth(colour = "grey") +
+  geom_point() +
+  scale_y_continuous(name = "Percentage vote for Democrats (%)") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_x_continuous(name = "Percentage turnout (%)") +
+  # facet_wrap(~mostly.dem, ncol = 1, nrow = 2) +
+  scale_fill_manual(values = c("light blue","lightcoral"))
+# county.perc.turnout.dems
+ggplotly(county.perc.turnout.dems, session = "knitr")
+
+```
+
+The following figure confirms that for many counties, the vote swung from Democrat to Republican 
+
+```{r swing 2012, echo = f, fig.cap="Percentage vote difference in 2012 and 2016 by county.Grey bars are 2012 results,\nred bars are overlaid 2016 results. Negative = Democrat win, positive = Republican win"}
+
+# Visualising county data 2012 vs 2016
+  county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$diff.2012.perc), ]
+  county.2016.vs.2012$ordered.county.2012.perc.diff = c(1:length(county.2016.vs.2012$diff.2012.perc))
+
+county.2012v2016.perc.diff.2016ord = ggplot(county.2016.vs.2012,
+                                            aes(x = ordered.county.2012.perc.diff, y = diff.2012.perc)) +
+  geom_bar(stat = "identity") + geom_bar(
+    stat = "identity",
+    aes(y = county.2016.vs.2012$perc.diff),
+    fill = "red",
+    alpha = 0.5
+  ) +
+  scale_y_continuous(
+    name = "Vote difference in 2012 and 2016 by county (%), negative = Democrat, positive = Republican ") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_x_discrete(
+    limit =  county.2016.vs.2012$ordered.county.2012.perc.diff,
+    labels = as.character(county.2016.vs.2012$county),
+    name = NULL
+  ) +
+  scale_fill_manual(values = c("light blue", "lightcoral"))
+county.2012v2016.perc.diff.2016ord
+
+```
+```{r swing2012to2016demtorepublican, echo = F, fig.cap= "Swing percentage between 2012 and 2016 by county. Blue/red bars indicate percentage swing, below 0 = swing to Democrat, above 0 = swing to Republican. Grey bars are percentage swing in turnout."}
+
+# Visualising the swing in votes
+county.summary.2016.final = county.summary.2016.final[order(county.summary.2016.final$swing.perc), ]
+county.summary.2016.final$ordered.county.swing.perc = c(1:length(county.summary.2016.final$swing.perc))
+
+# Percentage vote change
+county.2012v2016.swing.perc = ggplot(county.summary.2016.final,
+                                     aes(x = ordered.county.swing.perc, y = swing.perc, fill = winner)) +
+  geom_bar(stat = "identity") + geom_bar(stat = "identity",
+                                         aes(y = (
+                                           county.summary.2016.final$swing.turnout.perc
+                                         )),
+                                         fill = "grey",
+                                         width = 0.4) +
+  scale_y_continuous(
+    name = "Difference in vote between Democrats and Republicans (2016)") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_x_discrete(
+    limit =  county.summary.2016.final$ordered.county.swing.perc,
+    labels = as.character(county.summary.2016.final$county),
+    name = NULL
+  ) +
+  scale_fill_manual(values = c("light blue", "lightcoral"))
+county.2012v2016.swing.perc
+
+```
+
+
+
+The 'other' vote could not 
 
 
 

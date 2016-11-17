@@ -17,6 +17,7 @@ substrRight <- function(x, n){
   substr(x, nchar(x)-n+1, nchar(x))
 }
 
+
 # Loading 2016 results ----------------------------------------------------
 # Loading in 2016 results
 # Following guide here:
@@ -974,10 +975,10 @@ poll.summary.2012.nounds = poll.summary.2012[1:3,]
 ## VISUALISING THE 2016 RESULTS
 county.summary.compare = subset(counties.2000.2016, year == 2016)
 county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$county), ]
-added.columns = county.summary.compare[,24:32]
+added.columns = county.summary.compare[,20:28]
 county.2016.vs.2012 = cbind(county.2016.vs.2012, added.columns)
 
-county.2016.vs.2012$total.voters.age.est= as.integer(county.2016.vs.2012$total.voters.age.est)
+county.2016.vs.2012$total.voting.age= as.integer(county.2016.vs.2012$total.voters.age.est)
 county.2016.vs.2012.5000 = subset(county.2016.vs.2012, total.voters.age.est > 5000)
 
 
@@ -1241,6 +1242,28 @@ county.perc.winner = ggplot(
   scale_fill_manual(values = c("light blue", "lightcoral"))
 county.perc.winner
 
+
+# Visualising votes for clinton against turnout
+# Votes for other parties was pretty consistent regardless of being mostly dem or mostly republican
+county.perc.turnout.dems = ggplot(
+  county.2016.vs.2012.5000,
+  aes(
+    y = dem.votes.perc,
+    x = turnout.perc.allage.est,
+    colour = winner
+  )
+) +
+  geom_point() +
+  geom_smooth(colour = "black") +
+  scale_y_continuous(name = "Percentage vote for Clinton in Wisconsin counties\nagainst turnout in county.") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  # facet_wrap(~mostly.dem, ncol = 1, nrow = 2) +
+  scale_fill_manual(values = c("light blue","lightcoral"))
+county.perc.turnout.dems
+
+correlation(county.2016.vs.2012.5000$dem.votes.perc,county.2016.vs.2012.5000$turnout.perc.allage.est)
+# 0.1840505
+
 # Visualising votes for clinton against other.
 # Counties closest to middle most likely to vote other
 county.perc.oth.vs.dem = ggplot(
@@ -1251,7 +1274,8 @@ county.perc.oth.vs.dem = ggplot(
     colour = winner
   )) +
   geom_point() +
-  scale_y_continuous(name ="Percentage vote for Clinton in Wisconsin counties\nagainst turnout in county.") +
+  geom_smooth(colour = "black") +
+  scale_y_continuous(name ="Percentage vote for Clinton in counties against votes for 'other'.") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_colour_manual(values = c("light blue","lightcoral"))
   county.perc.oth.vs.dem
@@ -1273,6 +1297,9 @@ county.perc.turnout.other = ggplot(
   facet_wrap(~mostly.dem, ncol = 1, nrow = 2) +
   scale_fill_manual(values = c("light blue","lightcoral"))
 county.perc.turnout.other
+
+
+
 
 # Visualising votes for other against turnout
 # Votes for other parties was pretty consistent regardless of being mostly dem or mostly republican
@@ -1459,7 +1486,7 @@ votes.2016.compare
   county.2016.vs.2012$ordered.county.2012.perc.diff = c(1:length(county.2016.vs.2012$diff.2012.perc))
 
 county.2012v2016.perc.diff.2016ord = ggplot(county.2016.vs.2012,
-                                            aes(x = ordered.county.2016.perc.diff, y = diff.2012.perc)) +
+                                            aes(x = ordered.county.2012.perc.diff, y = diff.2012.perc)) +
   geom_bar(stat = "identity") + geom_bar(
     stat = "identity",
     aes(y = county.2016.vs.2012$perc.diff),
@@ -1523,7 +1550,7 @@ county.2012v2016.swing.perc = ggplot(county.summary.2016.final,
                                            county.summary.2016.final$swing.turnout.perc
                                          )),
                                          fill = "grey",
-                                         alpha = 0.8) +
+                                         width = 0.4) +
   scale_y_continuous(
     name = "Swing percentage between 2012 and 2016 by county. Blue/red bars indicate percentage swing,
 below 0 = swing to Democrat, above 0 = swing to Republican. Grey bars are percentage swing in turnout."
@@ -1827,3 +1854,25 @@ correlation(county.summary.2016.final$turnout.perc,
 # absolute.2016.2012.compare.plotnames = c("county.2012v2016.perc.diff.2016ord","county.differences.years.num")
 # absolute.2016.2012.compare = marrangeGrob(grobs = mget(absolute.2016.2012.compare.plotnames), nrow=2, ncol=1,top=NULL)
 # absolute.2016.2012.compare
+
+
+# Correlation plot --------------------------------------------------------
+require(corrplot)
+# indvars=read.table(file="indvarscorrelation14-03-16.csv",sep=",",header=TRUE,fill = TRUE,stringsAsFactors = FALSE)
+#
+# indvarscorr = with(indvars,
+#                    data.frame(cropmixlive,organicno,
+#                               worktimeno,landareano,agegroupedno,
+#                               genderno))
+#
+# correlationmatrix = cor(indvarscorr, use = "pairwise.complete.obs")
+#
+# corrplot(correlationmatrix, method = "number", type = "upper")
+#
+# write.table(correlationmatrix, file = "indvariablecorrelation14-03-16.csv")
+
+corr.table = with(county.2016.vs.2012, data.frame(turnout.perc.allage.est,dem.vote.perc,
+                                                  oth.vote.perc,total.voters.age.est,
+                                                  use.machines.prop)
+
+
