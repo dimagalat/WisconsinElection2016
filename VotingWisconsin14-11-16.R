@@ -1391,6 +1391,36 @@ county.perc.winner = ggplot(
 county.perc.winner
 
 
+county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$oth.votes.perc), ]
+county.2016.vs.2012$ordered.county.2016.oth.votes.perc = c(1:length(county.2016.vs.2012$oth.votes.perc))
+
+# Visualising votes for other by county and by turnout. Turnout does not seem to differ drastically according to
+# Republican won or Clinton won county
+county.perc.winner.other = ggplot(
+  county.2016.vs.2012,
+  aes(
+    x = county.2016.vs.2012$ordered.county.2016.oth.votes.perc,
+    y = oth.votes.perc,
+    fill = winner
+  )) +
+  geom_bar(
+    aes(y = county.2016.vs.2012$swing.turnout.perc),
+    stat = "identity",
+    fill = "grey", width = 0.8
+  ) +
+  geom_bar(stat = "identity", alpha = 0.6) +
+  scale_y_continuous(name =
+                       paste("Percentage vote for 'Other' in Wisconsin counties.\nGrey bar behind indicates change in turnout from 2012 (%)")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_x_discrete(
+    limit =  county.2016.vs.2012$ordered.county.2016.oth.votes.perc,
+    labels = as.character(county.2016.vs.2012$county),
+    name = NULL
+  ) +
+  scale_fill_manual(values = c("light blue", "lightcoral"))
+county.perc.winner.other
+
+
 # Visualising votes for clinton against turnout
 # Votes for other parties was pretty consistent regardless of being mostly dem or mostly republican
 county.perc.turnout.dems = ggplot(
@@ -1447,6 +1477,31 @@ county.perc.turnout.other = ggplot(
 county.perc.turnout.other
 
 
+# Visualising the swing in votes
+county.summary.2016.final = county.summary.2016.final[order(county.summary.2016.final$swing.perc), ]
+county.summary.2016.final$ordered.county.swing.perc = c(1:length(county.summary.2016.final$swing.perc))
+
+# Percentage vote change
+county.2012v2016.swing.perc = ggplot(county.summary.2016.final,
+                                     aes(x = ordered.county.swing.perc, y = swing.perc, fill = winner)) +
+  geom_bar(stat = "identity") + geom_bar(stat = "identity",
+                                         aes(y = (
+                                           county.summary.2016.final$swing.turnout.perc
+                                         )),
+                                         fill = "grey",
+                                         width = 0.4) +
+  scale_y_continuous(
+    name = "Difference in 2016 vote between Democrats and Republicans for counties (%).<br> Grey bars: difference in percentage turnout from the 2012 election.") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 4)) +
+  scale_x_discrete(
+    limit =  county.summary.2016.final$ordered.county.swing.perc,
+    labels = as.character(county.summary.2016.final$county),
+    name = NULL
+  ) +
+  scale_fill_manual(values = c("light blue", "lightcoral"))
+county.2012v2016.swing.perc
+# ggplotly(county.2012v2016.swing.perc, session = "knitr") %>% # , width = 800, height = 600
+# layout(bargap = 3, autosize=T, margin = default.margin) # l, r, b, t, pad
 
 
 # Visualising votes for other against turnout
@@ -1747,34 +1802,6 @@ county.2012v2016.swing.perc
 # swing.votes.2016.2012.compare
 }
 
-# Difference in those voting other
-{
-# county.summary.2016.final = county.summary.2016.final[order(county.summary.2016.final$oth.change), ]
-# county.summary.2016.final$ordered.county.oth.change = c(1:length(county.summary.2016.final$oth.change))
-#
-# # Increase in those voting 'other' between 2012 and 2016
-# county.2012v2016.change.oth.perc = ggplot(county.summary.2016.final,
-#                                     aes(x = ordered.county.oth.change, y = oth.change, fill = winner)) +
-#    geom_bar(stat = "identity") +
-#   geom_bar(
-#     stat = "identity",
-#     aes(y = county.summary.2016.final$swing.turnout.perc),
-#     fill = "grey",
-#     alpha = 0.8, width = 1
-#   ) +
-#   scale_y_continuous(
-#     name = "Change in percentage voting other by county."
-#   ) +
-#   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-#   scale_x_discrete(
-#     limit =  county.summary.2016.final$ordered.county.oth.change,
-#     labels = as.character(county.summary.2016.final$county),
-#     name = NULL
-#   ) +
-#   scale_fill_manual(values = c("light blue", "lightcoral"))
-# county.2012v2016.change.oth.perc
-
-}
 
 # Change in those voting 'Democrat' between 2012 and 2016 by turnout
 {
@@ -1826,7 +1853,7 @@ county.2012v2016.change.oth.perc.point
     geom_smooth(alpha = 0.5, colour = "grey", method = "lm", se = F) +
     geom_point(stat = "identity") +
     scale_y_continuous(
-      name = "Change in voting other from 2012 (%)."
+      name = "Change in voting other from 2012 (%)"
     ) +
     scale_x_continuous(
       name = "Change in Democrat from 2012 - 2016 (%)"
@@ -1840,63 +1867,7 @@ county.2012v2016.change.oth.perc.point
   county.2012v2016.change.oth.dem.point
 }
 
-# # turnout 2016 vs 2012 with mostly dem counties
-# {
-# county.summary.2016.final = county.summary.2016.final[order(county.summary.2016.final$swing.turnout.perc), ]
-# county.summary.2016.final$ordered.turnout.diff = c(1:length(county.summary.2016.final$swing.turnout.perc))
-#
-# turnout.diff.perc.graph = ggplot(county.summary.2016.final,
-#                                  aes(x = ordered.turnout.diff, y = swing.turnout.perc,
-#                                      fill = mostly.dem)) +
-#   geom_bar(stat = "identity") +
-#   scale_y_continuous(name = "Swing in turnout between 2012 and 2016 as percentage.") +
-#   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-#   scale_x_discrete(
-#     limit =  county.summary.2016.final$ordered.turnout.diff,
-#     labels = as.character(county.summary.2016.final$county),
-#     name = NULL
-#   ) +
-#   scale_fill_manual(values = c("light blue", "lightcoral"))
-# turnout.diff.perc.graph
-#
-# # As number of people
-# turnout.diff.num.graph = ggplot(county.summary.2016.final,
-#                                 aes(x = ordered.turnout.diff, y = swing.turnout, fill = winner)) +
-#   geom_bar(stat = "identity") +
-#   scale_y_continuous(name = "Swing in turnout between 2012 and 2016 in voter numbers.") +
-#   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-#   scale_x_discrete(
-#     limit =  county.summary.2016.final$ordered.turnout.diff,
-#     labels = as.character(county.summary.2016.final$county),
-#     name = NULL
-#   ) +
-#   scale_fill_manual(values = c("light blue", "lightcoral"))
-# turnout.diff.num.graph
-#
-# swing.turnout.2016.2012.compare.plotnames = c("turnout.diff.perc.graph", "turnout.diff.num.graph")
-# swing.turnout.2016.2012.compare = marrangeGrob(
-#   grobs = mget(swing.turnout.2016.2012.compare.plotnames),
-#   nrow = 2,
-#   ncol = 1,
-#   top = NULL
-# )
-# swing.turnout.2016.2012.compare
-# }
-
 # Correlation plot --------------------------------------------------------
-# indvars=read.table(file="indvarscorrelation14-03-16.csv",sep=",",header=TRUE,fill = TRUE,stringsAsFactors = FALSE)
-#
-# indvarscorr = with(indvars,
-#                    data.frame(cropmixlive,organicno,
-#                               worktimeno,landareano,agegroupedno,
-#                               genderno))
-#
-# correlationmatrix = cor(indvarscorr, use = "pairwise.complete.obs")
-#
-# corrplot(correlationmatrix, method = "number", type = "upper")
-#
-# write.table(correlationmatrix, file = "indvariablecorrelation14-03-16.csv")
-#
 plot(log(county.summary.2016.final.2000ppl$total.voting.age))
 plot(county.summary.2016.final.2000ppl$total.voting.age)
 
@@ -1916,7 +1887,6 @@ summary(other.vote.perc.lm)
 other.vote.perc.change.lm = lm(oth.change ~ swing.turnout.perc + log(turnout*use.machines.prop) + dem.wins,data = county.summary.2016.final.2000ppl)
 summary(other.vote.perc.change.lm)
 AIC(other.vote.perc.change.lm)
-
 ####
 {
 #Next, comparing residuals against each factor individually
@@ -1954,16 +1924,14 @@ lines(density(normed), col="red")
 shapiro.test(e2nona)
 ks.test(e2nona,rnorm)
 }
-
 ####
+
 other.vote.perc.change.lm.log = lm(oth.change ~ swing.turnout.perc + log(turnout) + use.machines.prop + dem.wins,data = county.summary.2016.final.2000ppl)
 summary(other.vote.perc.change.lm.log)
-
 AIC(other.vote.perc.change.lm.log)
 plot(other.vote.perc.change.lm.log)
-
 ####
-
+{
 #Next, comparing residuals against each factor individually
 layout.show(layout(matrix(c(1,2,3,4),2,2)))
 
@@ -1999,16 +1967,59 @@ lines(density(normed), col="red")
 
 shapiro.test(e2nona)
 ks.test(e2nona,rnorm)
-
+}
 ####
 
+# Change in those voting 'other' between 2012 and 2016 by absolute turnout
+{
+  county.2012v2016.change.oth.turnout.point = ggplot(county.summary.2016.final.2000ppl,
+                                                     aes(x = turnout, y = oth.change, colour = winner)) +
+    geom_smooth(alpha = 0.5, colour = "grey", method = "lm", se = F) +
+    geom_point(stat = "identity") +
+    scale_y_continuous(
+      name = "Change in vote for other 2012 - 2016 (%)"
+    ) +
+    scale_x_continuous(
+      name = "Absolute turnout 2012 - 2016"
+    ) +
+    geom_text(x = 100000, y = 5,
+              label = corr_eqn(county.summary.2016.final.2000ppl$turnout,
+                               county.summary.2016.final.2000ppl$oth.change), parse = TRUE,
+              show.legend = F, colour = "black") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    scale_colour_manual(values = c("light blue", "lightcoral"))
+  county.2012v2016.change.oth.turnout.point
+}
 
-# corr.table = with(county.summary.2016.final.2000ppl, data.frame(dem.change-oth.change,
-#                                                              swing.turnout.perc,total.voting.age,
-#                                                              use.machines.prop,dem.wins))
-# correlationmatrix = cor(corr.table, use = "pairwise.complete.obs")
-# corrplot.all = corrplot(correlationmatrix, method = "number", type = "upper")
-# corrplot.all
+# Change in those voting 'other' between 2012 and 2016 by log of turnout
+{
+  county.2012v2016.change.oth.turnout.log.point = ggplot(county.summary.2016.final.2000ppl,
+                                                     aes(x = log(turnout), y = oth.change, colour = winner)) +
+    geom_smooth(alpha = 0.5, colour = "grey", method = "lm", se = F) +
+    geom_point(stat = "identity") +
+    scale_y_continuous(
+      name = "Change in vote for other 2012 - 2016 (%)"
+    ) +
+    scale_x_continuous(
+      name = "Log of turnout 2012 - 2016"
+    ) +
+    geom_text(x = 8, y = 5,
+              label = corr_eqn(log(county.summary.2016.final.2000ppl$turnout),
+                               county.summary.2016.final.2000ppl$oth.change), parse = TRUE,
+              show.legend = F, colour = "black") +
+    theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) +
+    scale_colour_manual(values = c("light blue", "lightcoral"))
+  county.2012v2016.change.oth.turnout.log.point
+}
+
+other.turnout.2016.2012.compare.plotnames = c("county.2012v2016.change.oth.turnout.point",
+                                              "county.2012v2016.change.oth.turnout.log.point")
+other.turnout.2016.2012.compare = marrangeGrob(
+  grobs = mget(other.turnout.2016.2012.compare.plotnames),
+  nrow = 2,
+  ncol = 1,
+  top = NULL)
+other.turnout.2016.2012.compare
 
 # Looking at County data through time -------------------------------------
 # counties.2000.2016 = counties.2000.2016[order(counties.2000.2016$turnout), ]
@@ -2124,6 +2135,24 @@ historical.oth.vote.graph
 
 # Now, let's order the counties by proportion of municipalities using voting machines
 county.summary.2016.final = county.summary.2016.final[order(county.summary.2016.final$use.machines.prop), ]
+county.summary.2016.final$use.machines.prop.order = c(1:length(county.summary.2016.final$use.machines.prop))
+
+# Machines by county
+county.vs.machines.bar = ggplot(
+  county.summary.2016.final,
+  aes(x = county.summary.2016.final$use.machines.prop.order, y = use.machines.prop * 100,
+      fill = machine.most.used)
+) +
+  geom_bar(stat="identity") +
+  scale_y_continuous(name = "Use of voting machines in each county (%)") +
+  scale_x_discrete(
+    limit =  county.summary.2016.final$use.machines.prop.order,
+    labels = as.character(county.summary.2016.final$county),
+    name = NULL) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5)) +
+  scale_fill_discrete(name = "Primary machine vendor")
+county.vs.machines.bar
+
 
 # Swing percentage on x axis vs the % of municipalities that use voting machines in the county
 county.swing.perc.vs.machines.point = ggplot(
@@ -2137,6 +2166,8 @@ county.swing.perc.vs.machines.point = ggplot(
                      Democrats, positive is towards republicans") +
   scale_colour_discrete(name = "Primary machine vendor")
 county.swing.perc.vs.machines.point
+
+
 correlation(county.summary.2016.final$swing.perc,
             county.summary.2016.final$use.machines.prop)
 # cor -0.712513 : high correlation
