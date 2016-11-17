@@ -520,13 +520,13 @@ correlationmatrix.log = cor(corr.table.log, use = "pairwise.complete.obs")
 corrplot.all.log = corrplot(correlationmatrix, method = "number", type = "upper")
 ```
 
-Now we can see that the change in vote for other between 2012 and 2016 is highly correlated with the log of the turnout. So, we are back to step 1. We cannot conclude that the other vote change was linked to voting machines, and not just overall turnout.
+Now we can see that the change in vote for other between 2012 and 2016 is highly correlated with the log of the turnout. So, we are back to step 1. Since the results are not consistent when using the original turnout numbers or the logged turnout numbers, we cannot conclude that the other vote change was linked to voting machines, and not just overall turnout.
 
 Still, it is worth confirming this output with a couple more figures. 
 
 ## Analysing county results 2000 - 2016 vs voting machine presence in 2016
 
-The following show the change in other vote with time according to the use of machines or the by the previous voting record of the county (Democrat or Repulican).
+The following show the change in other vote with time according to the use of machines or the by the previous voting record of the county (Democrat or Repulican). What we can see is that although the vote for 'other' is generally higher in 2016, and for counties that use voting machines, this is the same whether the county normally votes Democrat or Republican.
 
 ```{r correlationgraph machines other vote, echo = F, fig.cap="Other vote by use of voting machines in county (%), and the counties that have chosen mostly Democrat or Republican since 2000. Points are individual county results, lines are a mean of the counties in each category."}
 historical.oth.vote.perc.graph = ggplot(counties.2000.2016.2000ppl,
@@ -542,4 +542,38 @@ historical.oth.vote.perc.graph = ggplot(counties.2000.2016.2000ppl,
 historical.oth.vote.perc.graph
 ```
 
+```{r correlationgraph machines other change, echo = F, fig.cap="Change in other vote (%) by use of voting machines in county (%), and the counties that have chosen mostly Democrat or Republican since 2000. Points are individual county results, lines are a mean of the counties in each category."}
+historical.oth.vote.perc.change.graph = ggplot(counties.2000.2016.2000ppl,
+                                        aes(x = year, y = oth.change, colour = all.machines,
+                                            group = all.machines)) +
+  geom_jitter(alpha = 0.6, width = 0.2) +
+  geom_smooth() +
+  scale_y_continuous(name = "Change in other vote from previous election by county (%)") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.title = element_blank()) +
+  scale_x_continuous(breaks = c(seq(2000,2016,4))) +
+  scale_colour_manual(values = c("light blue","lightcoral"))  +
+  facet_wrap(~mostly.dem)
+historical.oth.vote.perc.change.graph
+```
 
+```{r correlationgraph machines other numbers, echo = F, fig.cap="Change in other vote (number of people) by use of voting machines in county (%), and the counties that have chosen mostly Democrat or Republican since 2000. Points are individual county results, lines are a mean of the counties in each category. The error bars are particularly large here because of Milwaukee and Dane counties."}
+
+historical.oth.vote.graph = ggplot(counties.2000.2016.2000ppl,
+                                   aes(x = year, y = oth.vote, colour = all.machines,
+                                       group = all.machines)) +
+  geom_jitter(alpha = 0.6, width = 0.2) +
+  geom_smooth() +
+  scale_y_continuous(name = "Number of other voters by county (%)") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.title = element_blank()) +
+  scale_x_continuous(breaks = c(seq(2000,2016,4))) +
+  scale_colour_manual(values = c("light blue","lightcoral"))  +
+  facet_wrap(~mostly.dem)
+historical.oth.vote.graph
+
+```
+
+# Conclusion
+
+In general, the Wisconsin 2016 elections fell within historical ranges in terms of turnout, votes for Democrat and Republican party, and swing from Democrat to Republican. This election does stand out in terms of the increased votes for other parties compared to previous contests. The votes for Wisconsin 'other' parties matched closely the national averages.
+
+I checked the results of the Wisconsin election at the county level to see if there was anything unusual. Changes in voting patterns in 2016 could not be attributed to historical county loyalty to one party or another, or a drop in turnout that affected one party more than another. Turnout number, a proxy for county population (and the urban-rural divide), was highly linked to votes for one party over another, which was also linked to the number of voting machines used in the county. With the data available, it was not possible to separate the effects of turnout number and voting machines.

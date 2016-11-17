@@ -2028,7 +2028,7 @@ historical.oth.vote.perc.graph = ggplot(counties.2000.2016.2000ppl,
   facet_wrap(~mostly.dem)
 historical.oth.vote.perc.graph
 
-historical.oth.vote.perc.graph = ggplot(counties.2000.2016.2000ppl,
+historical.oth.vote.perc.change.graph = ggplot(counties.2000.2016.2000ppl,
                                         aes(x = year, y = oth.change, colour = all.machines,
                                             group = all.machines)) +
   geom_jitter(alpha = 0.6, width = 0.2) +
@@ -2038,7 +2038,7 @@ historical.oth.vote.perc.graph = ggplot(counties.2000.2016.2000ppl,
   scale_x_continuous(breaks = c(seq(2000,2016,4))) +
   scale_colour_manual(values = c("light blue","lightcoral"))  +
   facet_wrap(~mostly.dem)
-historical.oth.vote.perc.graph
+historical.oth.vote.perc.change.graph
 
 # Other numbers
 historical.oth.vote.graph.hist = ggplot(counties.2000.2016.2000ppl[counties.2000.2016.2000ppl$year == 2016,],
