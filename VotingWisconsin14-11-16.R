@@ -920,86 +920,80 @@ rm(vote.equip.county.machines,vote.equip.county.grouped,voting.age.people,test,
    machine.join, historical.turnout.join,a,)
 
 # Loading in poverty data -------------------------------------------------
-poverty.dat.full = read.csv("C:\\Users\\s_cas\\Documents\\usa_income_county.csv",header=F)
-head(poverty.dat.full)
+# This csv loading takes a long time, don't want to repeat it :p
 
-poverty.dat = data.frame(as.character(poverty.dat.full$V1))
-colnames(poverty.dat) = "V1"
-
-nchar(paste(poverty.dat[1]))
-
-pov.dat = poverty.dat
-pov.dat$year = substring(pov.dat$V1, 1, 4) #4
-pov.dat$V1 = substring(pov.dat$V1, 5)
-
-pov.dat$datanum = substring(pov.dat$V1, 1, 2)
-pov.dat$V1 = substring(pov.dat$V1, 3)
-head(pov.dat)
-
-pov.dat$serial= substring(pov.dat$V1, 1, 8)
-pov.dat$V1 = substring(pov.dat$V1, 9)
-head(pov.dat)
-
-pov.dat$hhwt= substring(pov.dat$V1, 1, 10)
-pov.dat$V1 = substring(pov.dat$V1, 11)
-head(pov.dat)
-
-pov.dat$stateicp= substring(pov.dat$V1, 1, 2)
-pov.dat$V1 = substring(pov.dat$V1, 3)
-head(pov.dat)
-
-pov.dat = subset(pov.dat, pov.dat$stateicp == 25) # This is Wisconsin
-
-pov.dat$county= substring(pov.dat$V1, 1, 4)
-pov.dat$V1 = substring(pov.dat$V1, 5)
-head(pov.dat)
-
-nchar(paste(pov.dat$county[1]))
-
-pov.dat$gq= substring(pov.dat$V1, 1, 1)
-pov.dat$V1 = substring(pov.dat$V1, 2)
-head(pov.dat)
-
-nchar(paste(pov.dat$gq[1]))
-
-# It says this is length 4 in the guide, but I don't believe it, I think it is 2
-pov.dat$pernum= substring(pov.dat$V1, 1, 4)
-pov.dat$V1 = substring(pov.dat$V1, 5)
-head(pov.dat)
-
-nchar(paste(pov.dat$pernum[1]))
-
-pov.dat$perwt= substring(pov.dat$V1, 1, 10)
-pov.dat$V1 = substring(pov.dat$V1, 11)
-head(pov.dat)
-
-nchar(paste(pov.dat$perwt[1]))
-
-pov.dat$ftotinc= substring(pov.dat$V1, 1, 7)
-pov.dat$V1 = substring(pov.dat$V1, 8)
-head(pov.dat)
-
-nchar(paste(pov.dat$ftotinc[1]))
-
-pov.dat$V1 = NULL
-
-pov.dat$county = as.character(pov.dat$county)
-
-pov.summary = pov.dat
-
-
-
-
-write.table(pov.summary,"pov.summary.txt")
+# poverty.dat.full = read.csv("C:\\Users\\s_cas\\Documents\\usa_income_county.csv",header=F)
+# head(poverty.dat.full)
+#
+# poverty.dat = data.frame(as.character(poverty.dat.full$V1))
+# colnames(poverty.dat) = "V1"
+#
+# nchar(paste(poverty.dat[1]))
+#
+# pov.dat = poverty.dat
+# pov.dat$year = substring(pov.dat$V1, 1, 4) #4
+# pov.dat$V1 = substring(pov.dat$V1, 5)
+#
+# pov.dat$datanum = substring(pov.dat$V1, 1, 2)
+# pov.dat$V1 = substring(pov.dat$V1, 3)
+# head(pov.dat)
+#
+# pov.dat$serial= substring(pov.dat$V1, 1, 8)
+# pov.dat$V1 = substring(pov.dat$V1, 9)
+# head(pov.dat)
+#
+# pov.dat$hhwt= substring(pov.dat$V1, 1, 10)
+# pov.dat$V1 = substring(pov.dat$V1, 11)
+# head(pov.dat)
+#
+# pov.dat$stateicp= substring(pov.dat$V1, 1, 2)
+# pov.dat$V1 = substring(pov.dat$V1, 3)
+# head(pov.dat)
+#
+# pov.dat = subset(pov.dat, pov.dat$stateicp == 25) # This is Wisconsin
+#
+# pov.dat$county= substring(pov.dat$V1, 1, 4)
+# pov.dat$V1 = substring(pov.dat$V1, 5)
+# head(pov.dat)
+#
+# nchar(paste(pov.dat$county[1]))
+#
+# pov.dat$gq= substring(pov.dat$V1, 1, 1)
+# pov.dat$V1 = substring(pov.dat$V1, 2)
+# head(pov.dat)
+#
+# nchar(paste(pov.dat$gq[1]))
+#
+# # It says this is length 4 in the guide, but I don't believe it, I think it is 2
+# pov.dat$pernum= substring(pov.dat$V1, 1, 4)
+# pov.dat$V1 = substring(pov.dat$V1, 5)
+# head(pov.dat)
+#
+# nchar(paste(pov.dat$pernum[1]))
+#
+# pov.dat$perwt= substring(pov.dat$V1, 1, 10)
+# pov.dat$V1 = substring(pov.dat$V1, 11)
+# head(pov.dat)
+#
+# nchar(paste(pov.dat$perwt[1]))
+#
+# pov.dat$ftotinc= substring(pov.dat$V1, 1, 7)
+# pov.dat$V1 = substring(pov.dat$V1, 8)
+# head(pov.dat)
+#
+# nchar(paste(pov.dat$ftotinc[1]))
+#
+# pov.dat$V1 = NULL
+#
+# pov.dat$county = as.character(pov.dat$county)
+#
+# pov.summary = pov.dat
+#
+# write.table(pov.summary,"pov.summary.txt")
 
 pov.summary = read.table("pov.summary.txt",colClasses = "character")
 
 colnames(pov.summary)[6] = "county.code"
-
-table(pov.summary$county)
-
-unique(pov.summary$county)
-
 
 county.ref = read.csv("wisc25countyref.csv", header= F)
 county.ref2 = gsub("<dt>","",county.ref$V1)
@@ -1010,13 +1004,33 @@ county.ref2.split = t(data.frame(strsplit(county.ref2,"<dd>")))
 county.codes = data.frame(unname(county.ref2.split))
 colnames(county.codes) = c("county.code","county")
 
+pov.summary = plyr::join(pov.summary, county.codes,by="county.code")
 
-str(pov.summary)
-str(county.codes)
+pov.summary$ftotinc = as.numeric(pov.summary$ftotinc)
 
-pov.summary2 = plyr::join(pov.summary, county.codes,by="county.code")
+# group by household
+pov.summary.grouped = group_by(pov.summary,hhwt,county)
+pov.summary.group = dplyr::summarise(pov.summary.grouped,
+                                     ftotinc = mean(ftotinc,na.rm = T))
 
+pov.summary.group = subset(pov.summary.group, ftotinc < 999999)
+pov.summary.group = subset(pov.summary.group, !is.na(county))
 
+# group by county
+pov.summary.grouped = group_by(pov.summary.group,county)
+    pov.summary.group = dplyr::summarise(pov.summary.grouped,
+                                         mean(ftotinc,na.rm = T))
+
+pov.summary.group$county = as.character(pov.summary.group$county)
+pov.summary.group$county[pov.summary.group$county == "LaCrosse"] = "La Crosse"
+colnames(pov.summary.group) = c("county","ftotinc")
+
+write.csv(pov.summary.group,"pov.county.csv")
+
+# Joining poverty info to other tables
+
+county.summary.df = join(county.summary.df,pov.summary.group,by="county")
+counties.2000.2016 = join(counties.2000.2016,pov.summary.group,by="county")
 
 # Write final csvs --------------------------------------------------------
 
@@ -1098,15 +1112,23 @@ added.columns = county.summary.2016.final[,20:28]
 county.2016.vs.2012 = cbind(county.2016.vs.2012, added.columns)
 
 county.2016.vs.2012$total.voting.age= as.integer(county.2016.vs.2012$total.voters.age.est)
-county.2016.vs.2012.5000 = subset(county.2016.vs.2012, total.voters.age.est > 5000)
+county.2016.vs.2012.2000ppl = subset(county.2016.vs.2012, turnout > 2000)
+
+county.2016.vs.2012.2000ppl.mildane= subset(county.2016.vs.2012.2000ppl, county != "Milwaukee" & county != "Dane")
+
 
 county.summary.2016.final$mostly.dem.num = ifelse(county.summary.2016.final$mostly.dem == "Mostly Dem",1,0)
 county.summary.2016.final$dem.other.change = county.summary.2016.final$dem.change - county.summary.2016.final$oth.change
 
 county.summary.2016.final.highpop = subset(county.summary.2016.final, total.voting.age > mean(total.voting.age))
 county.summary.2016.final$total.voting.age= as.integer(county.summary.2016.final$total.voting.age)
-county.summary.2016.final.5000= subset(county.summary.2016.final, total.voting.age > 5000)
+county.summary.2016.final.2000ppl= subset(county.summary.2016.final, turnout > 2000)
 
+county.summary.2016.final.2000ppl.mildane= subset(county.summary.2016.final.2000ppl, county != "Milwaukee" & county != "Dane")
+
+counties.2000.2016.2000ppl= subset(counties.2000.2016, turnout > 2000)
+
+counties.2000.2016.2000ppl.mildane = subset(counties.2000.2016.2000ppl, county != "Milwaukee" & county != "Dane")
 
 # Comparing 2016 candidate results overall -------------------------------------
 # The majority of 'other' voters went for Gary Johnson. Hillary massively underperformed compared
@@ -1372,7 +1394,7 @@ county.perc.winner
 # Visualising votes for clinton against turnout
 # Votes for other parties was pretty consistent regardless of being mostly dem or mostly republican
 county.perc.turnout.dems = ggplot(
-  county.2016.vs.2012.5000,
+  county.2016.vs.2012.2000ppl,
   aes(
     y = dem.votes.perc,
     x = turnout.perc.allage.est,
@@ -1387,13 +1409,13 @@ county.perc.turnout.dems = ggplot(
   scale_fill_manual(values = c("light blue","lightcoral"))
 county.perc.turnout.dems
 
-correlation(county.2016.vs.2012.5000$dem.votes.perc,county.2016.vs.2012.5000$turnout.perc.allage.est)
+correlation(county.2016.vs.2012.2000ppl$dem.votes.perc,county.2016.vs.2012.2000ppl$turnout.perc.allage.est)
 # 0.1840505
 
 # Visualising votes for clinton against other.
 # Counties closest to middle most likely to vote other
 county.perc.oth.vs.dem = ggplot(
-  county.2016.vs.2012.5000,
+  county.2016.vs.2012.2000ppl,
   aes(
     x = oth.votes.perc,
     y = dem.votes.perc,
@@ -1409,7 +1431,7 @@ county.perc.oth.vs.dem = ggplot(
 # Visualising votes for other against turnout
 # Votes for other parties was pretty consistent regardless of being mostly dem or mostly republican
 county.perc.turnout.other = ggplot(
-  county.2016.vs.2012.5000,
+  county.2016.vs.2012.2000ppl,
   aes(
     x = turnout.perc.allage.est,
     y = oth.votes.perc,
@@ -1756,7 +1778,7 @@ county.2012v2016.swing.perc
 
 # Change in those voting 'Democrat' between 2012 and 2016 by turnout
 {
-  county.2012v2016.change.dem.perc.point = ggplot(county.summary.2016.final.5000,
+  county.2012v2016.change.dem.perc.point = ggplot(county.summary.2016.final.2000ppl,
                                                   aes(x = swing.turnout.perc, y = dem.change, colour = winner)) +
     geom_smooth(alpha = 0.5, colour = "grey", method = "lm", se = F) +
     geom_point(stat = "identity") +
@@ -1767,8 +1789,8 @@ county.2012v2016.swing.perc
       name = "Change in turnout 2012 - 2016 (%)"
     ) +
     geom_text(x = -8, y = 2,
-              label = corr_eqn(county.summary.2016.final.5000$swing.turnout.perc,
-                               county.summary.2016.final.5000$dem.change), parse = TRUE,
+              label = corr_eqn(county.summary.2016.final.2000ppl$swing.turnout.perc,
+                               county.summary.2016.final.2000ppl$dem.change), parse = TRUE,
               show.legend = F, colour = "black") +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     scale_colour_manual(values = c("light blue", "lightcoral"))
@@ -1777,7 +1799,7 @@ county.2012v2016.swing.perc
 
 # Change in those voting 'other' between 2012 and 2016 by turnout
 {
-county.2012v2016.change.oth.perc.point = ggplot(county.summary.2016.final.5000,
+county.2012v2016.change.oth.perc.point = ggplot(county.summary.2016.final.2000ppl,
                                                 aes(x = swing.turnout.perc, y = oth.change, colour = winner)) +
   geom_smooth(alpha = 0.5, colour = "grey", method = "lm", se = F) +
   geom_point(stat = "identity") +
@@ -1788,8 +1810,8 @@ county.2012v2016.change.oth.perc.point = ggplot(county.summary.2016.final.5000,
       name = "Change in turnout 2012 - 2016 (%)"
     ) +
   geom_text(x = -8, y = 5,
-            label = corr_eqn(county.summary.2016.final.5000$swing.turnout.perc,
-                              county.summary.2016.final.5000$oth.change), parse = TRUE,
+            label = corr_eqn(county.summary.2016.final.2000ppl$swing.turnout.perc,
+                              county.summary.2016.final.2000ppl$oth.change), parse = TRUE,
             show.legend = F, colour = "black") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_colour_manual(values = c("light blue", "lightcoral"))
@@ -1799,7 +1821,7 @@ county.2012v2016.change.oth.perc.point
 # Change in those voting dem - those between 2012 and 2016
 {
   # The bigger the change from Democrat, the lower the change in other
-  county.2012v2016.change.oth.dem.point = ggplot(county.summary.2016.final.5000,
+  county.2012v2016.change.oth.dem.point = ggplot(county.summary.2016.final.2000ppl,
                                                  aes(x = dem.change, y = oth.change, colour = winner)) +
     geom_smooth(alpha = 0.5, colour = "grey", method = "lm", se = F) +
     geom_point(stat = "identity") +
@@ -1810,8 +1832,8 @@ county.2012v2016.change.oth.perc.point
       name = "Change in Democrat from 2012 - 2016 (%)"
     ) +
     geom_text(x = 0, y = 5,
-              label = corr_eqn(county.summary.2016.final.5000$dem.change,
-                               county.summary.2016.final.5000$oth.change), parse = TRUE,
+              label = corr_eqn(county.summary.2016.final.2000ppl$dem.change,
+                               county.summary.2016.final.2000ppl$oth.change), parse = TRUE,
               show.legend = F, colour = "black") +
     theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
     scale_colour_manual(values = c("light blue", "lightcoral"))
@@ -1875,191 +1897,225 @@ county.2012v2016.change.oth.perc.point
 #
 # write.table(correlationmatrix, file = "indvariablecorrelation14-03-16.csv")
 #
-corr.table = with(county.summary.2016.final.5000, data.frame(dem.change, rep.change,
-                                                  oth.change,swing.turnout.perc,total.voting.age,
+plot(log(county.summary.2016.final.2000ppl$total.voting.age))
+plot(county.summary.2016.final.2000ppl$total.voting.age)
+
+corr.table = with(county.summary.2016.final.2000ppl, data.frame(dem.change, rep.change,
+                                                  oth.change,swing.turnout.perc,log(turnout),
                                                   use.machines.prop,dem.wins))
 correlationmatrix = cor(corr.table, use = "pairwise.complete.obs")
 corrplot.all = corrplot(correlationmatrix, method = "number", type = "upper")
 
-# corr.table = with(county.summary.2016.final.5000, data.frame(dem.change-oth.change,
+require(nlme)
+other.vote.lm = lm(log(oth.vote) ~ swing.turnout.perc +log(turnout) + use.machines.prop + dem.wins,data = county.summary.2016.final.2000ppl)
+summary(other.vote.lm)
+
+other.vote.perc.lm = lm(oth.vote.perc ~ swing.turnout.perc + log(turnout) + use.machines.prop + dem.wins,data = county.summary.2016.final.2000ppl)
+summary(other.vote.perc.lm)
+
+other.vote.perc.change.lm = lm(oth.change ~ swing.turnout.perc + log(turnout*use.machines.prop) + dem.wins,data = county.summary.2016.final.2000ppl)
+summary(other.vote.perc.change.lm)
+AIC(other.vote.perc.change.lm)
+
+####
+{
+#Next, comparing residuals against each factor individually
+layout.show(layout(matrix(c(1,2,3,4),2,2)))
+
+A <- data.frame(rstandard(other.vote.perc.change.lm),
+                other.vote.perc.change.lm$model$swing.turnout.perc,other.vote.perc.change.lm$model$turnout,
+                other.vote.perc.change.lm$model$use.machines.prop,
+                other.vote.perc.change.lm$model$dem.wins
+                )
+colnames(A) <- c("resid", "swing.turnout.perc","turnout","use.machines.prop","dem.wins")
+plot(A$resid ~ A$swing.turnout.perc, xlab = "swing.turnout.perc",
+     ylab = "Residuals"); abline(0,0)
+
+plot(A$resid ~ A$use.machines.prop, xlab = "turnout",
+     ylab = "Residuals"); abline(0,0)
+
+plot(A$resid ~ A$use.machines.prop, xlab = "use.machines.prop",
+     ylab = "Residuals"); abline(0,0)
+
+plot(A$resid ~ A$use.machines.prop, xlab = "dem.wins",
+     ylab = "Residuals"); abline(0,0)
+
+e2nona = A$resid[!is.na(A$resid)]
+residlength = length(e2nona)
+residsd = sd(e2nona, na.rm = TRUE)
+residmean = mean(e2nona, na.rm = TRUE)
+normed = (rnorm(10000, mean = residmean, sd = residsd))
+
+#Following gives PROBABILITY DENSITIES instead of frequencies
+hist(e2nona,xlab="Residuals", main="Model residuals vs rnorm 10000 (red line)",
+     freq=FALSE, ylim = c(0,0.7), breaks = 15)
+lines(density(normed), col="red")
+
+shapiro.test(e2nona)
+ks.test(e2nona,rnorm)
+}
+
+####
+other.vote.perc.change.lm.log = lm(oth.change ~ swing.turnout.perc + log(turnout) + use.machines.prop + dem.wins,data = county.summary.2016.final.2000ppl)
+summary(other.vote.perc.change.lm.log)
+
+AIC(other.vote.perc.change.lm.log)
+plot(other.vote.perc.change.lm.log)
+
+####
+
+#Next, comparing residuals against each factor individually
+layout.show(layout(matrix(c(1,2,3,4),2,2)))
+
+A <- data.frame(rstandard(other.vote.perc.change.lm.log),
+                other.vote.perc.change.lm.log$model$swing.turnout.perc,other.vote.perc.change.lm.log$model$"log(turnout)",
+                other.vote.perc.change.lm.log$model$use.machines.prop,
+                other.vote.perc.change.lm.log$model$dem.wins
+)
+
+colnames(A) <- c("resid", "swing.turnout.perc","turnout","use.machines.prop","dem.wins")
+plot(A$resid ~ A$swing.turnout.perc, xlab = "swing.turnout.perc",
+     ylab = "Residuals"); abline(0,0)
+
+plot(A$resid ~ A$use.machines.prop, xlab = "turnout",
+     ylab = "Residuals"); abline(0,0)
+
+plot(A$resid ~ A$use.machines.prop, xlab = "use.machines.prop",
+     ylab = "Residuals"); abline(0,0)
+
+plot(A$resid ~ A$use.machines.prop, xlab = "dem.wins",
+     ylab = "Residuals"); abline(0,0)
+
+e2nona = A$resid[!is.na(A$resid)]
+residlength = length(e2nona)
+residsd = sd(e2nona, na.rm = TRUE)
+residmean = mean(e2nona, na.rm = TRUE)
+normed = (rnorm(10000, mean = residmean, sd = residsd))
+
+#Following gives PROBABILITY DENSITIES instead of frequencies
+hist(e2nona,xlab="Residuals", main="Model residuals vs rnorm 10000 (red line)",
+     freq=FALSE, ylim = c(0,0.7), breaks = 15)
+lines(density(normed), col="red")
+
+shapiro.test(e2nona)
+ks.test(e2nona,rnorm)
+
+####
+
+
+# corr.table = with(county.summary.2016.final.2000ppl, data.frame(dem.change-oth.change,
 #                                                              swing.turnout.perc,total.voting.age,
 #                                                              use.machines.prop,dem.wins))
 # correlationmatrix = cor(corr.table, use = "pairwise.complete.obs")
 # corrplot.all = corrplot(correlationmatrix, method = "number", type = "upper")
 # corrplot.all
 
-"voting age / use machines"
-
-corr.table = with(county.summary.2016.final.5000, data.frame(dem.change-oth.change,
-                                                             swing.turnout.perc,total.voting.age,
-                                                             use.machines.prop,dem.wins))
-correlationmatrix = cor(corr.table, use = "pairwise.complete.obs")
-corrplot.all = corrplot(correlationmatrix, method = "number", type = "upper")
-corrplot.all
-
-
-
-
-corr.table = with(county.summary.2016.final.highpop, data.frame(dem.change, rep.change,
-                                                             oth.change,swing.turnout.perc,total.voting.age,
-                                                             use.machines.prop,dem.wins))
-correlationmatrix = cor(corr.table, use = "pairwise.complete.obs")
-corrplot.highpop = corrplot(correlationmatrix, method = "number", type = "upper")
-
 # Looking at County data through time -------------------------------------
-counties.2000.2016 = counties.2000.2016[order(counties.2000.2016$turnout), ]
-counties.2000.2016$ordered.turnout = c(1:length(counties.2000.2016$year))
-
-turnout.diff.num.graph = ggplot(counties.2000.2016,
-                                aes(x = year, y = turnout, fill = winning.party)) +
-  geom_bar(stat = "identity") +
-  scale_y_continuous(name = "Overall turnout with time in counties per winning party.") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  # scale_x_discrete(
-  #   limit =  counties.2000.2016$ordered.turnout,
-  #   labels = as.character(counties.2000.2016$year),
-  #   name = NULL
-  # ) +
-  scale_fill_manual(values = c("light blue", "lightcoral"))
-turnout.diff.num.graph
-
-turnout.diff.num.graph = ggplot(counties.2000.2016,
-                                aes(x = year, y = turnout, fill = winning.party)) +
-  geom_bar(stat = "identity") +
-  scale_y_continuous(name = "Overall turnout with time in counties per winning party.") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  # scale_x_discrete(
-  #   limit =  counties.2000.2016$ordered.turnout,
-  #   labels = as.character(counties.2000.2016$year),
-  #   name = NULL
-  # ) +
-  facet_wrap(~mostly.dem)
-  scale_fill_manual(values = c("light blue", "lightcoral"))
-turnout.diff.num.graph
-
-turnout.diff.num.turnout.graph = ggplot(counties.2000.2016,
-                                aes(x = year, y = turnout, fill = winning.party)) +
-  geom_bar(stat = "identity") +
-  scale_y_continuous(name = "Overall turnout with time in counties per winning party.") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  # scale_x_discrete(
-  #   limit =  counties.2000.2016$ordered.turnout,
-  #   labels = as.character(counties.2000.2016$year),
-  #   name = NULL
-  # ) +
-  facet_wrap(~most.turnout.drop)
-scale_fill_manual(values = c("light blue", "lightcoral"))
-turnout.diff.num.turnout.graph
-
-
-turnout.diff.num.graph = ggplot(counties.2000.2016,
-                                aes(x = year, y = turnout, colour = winning.party,
-                                    group = county)) +
-  geom_line(stat = "identity") +
-  scale_y_continuous(name = "Overall turnout with time by winning party.") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  # scale_x_discrete(
-  #   limit =  counties.2000.2016$ordered.turnout,
-  #   labels = as.character(counties.2000.2016$year),
-  #   name = NULL
-  # ) +
-  facet_wrap(~mostly.dem)
-  scale_fill_manual(values = c("lightcoral", "light blue"))
-turnout.diff.num.graph
-
-
-historical.dem.vote.perc.graph = ggplot(counties.2000.2016,
-                                aes(x = year, y = dem.vote.perc, colour = winning.party,
-                                    group = county)) +
-  geom_line(stat = "identity") +
-  scale_y_continuous(name = "Overall dem.vote.perc with time by winning party.") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  # scale_x_discrete(
-  #   limit =  counties.2000.2016$ordered.dem.vote.perc,
-  #   labels = as.character(counties.2000.2016$year),
-  #   name = NULL
-  # ) +
-  facet_wrap(~mostly.dem)
-scale_fill_manual(values = c("lightcoral", "light blue"))
-historical.dem.vote.perc.graph
-
-historical.dem.vote.perc.graph = ggplot(counties.2000.2016,
-                                        aes(x = year, y = dem.vote.perc, colour = winning.party,
-                                            group = county)) +
-  geom_line(stat = "identity") +
-  scale_y_continuous(name = "Overall dem.vote.perc with time by winning party.") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  # scale_x_discrete(
-  #   limit =  counties.2000.2016$ordered.dem.vote.perc,
-  #   labels = as.character(counties.2000.2016$year),
-  #   name = NULL
-  # ) +
-  facet_wrap(~most.turnout.drop)
-scale_fill_manual(values = c("lightcoral", "light blue"))
-historical.dem.vote.perc.graph
+# counties.2000.2016 = counties.2000.2016[order(counties.2000.2016$turnout), ]
+# counties.2000.2016$ordered.turnout = c(1:length(counties.2000.2016$year))
 
 ### Other votes
 
-historical.oth.vote.perc.graph = ggplot(counties.2000.2016,
-                                        aes(x = year, y = oth.vote.perc, colour = winning.party,
-                                            group = county)) +
-  geom_line(stat = "identity") +
-  scale_y_continuous(name = "Overall oth.vote.perc with time by winning party.") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  # scale_x_discrete(
-  #   limit =  counties.2000.2016$ordered.oth.vote.perc,
-  #   labels = as.character(counties.2000.2016$year),
-  #   name = NULL
-  # ) +
-  facet_wrap(~most.turnout.drop)
-scale_fill_manual(values = c("lightcoral", "light blue"))
+historical.oth.vote.perc.graph = ggplot(counties.2000.2016.2000ppl,
+                                        aes(x = year, y = oth.vote.perc, colour = all.machines,
+                                            group = all.machines)) +
+  geom_jitter(alpha = 0.6, width = 0.2) +
+  geom_smooth(size = 2) +
+  scale_y_continuous(name = "Other vote by use of voting machines in county (%)") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.title = element_blank()) +
+  scale_x_continuous(breaks = c(seq(2000,2016,4))) +
+  scale_colour_manual(values = c("light blue","lightcoral"))  +
+  facet_wrap(~mostly.dem)
 historical.oth.vote.perc.graph
 
-historical.oth.vote.perc.graph = ggplot(counties.2000.2016,
-                                        aes(x = year, y = oth.vote.perc, colour = winning.party,
-                                            group = county)) +
-  geom_line(stat = "identity") +
-  scale_y_continuous(name = "Overall oth.vote.perc with time by winning party.") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  # scale_x_discrete(
-  #   limit =  counties.2000.2016$ordered.oth.vote.perc,
-  #   labels = as.character(counties.2000.2016$year),
-  #   name = NULL
-  # ) +
+historical.oth.vote.perc.graph = ggplot(counties.2000.2016.2000ppl,
+                                        aes(x = year, y = oth.change, colour = all.machines,
+                                            group = all.machines)) +
+  geom_jitter(alpha = 0.6, width = 0.2) +
+  geom_smooth() +
+  scale_y_continuous(name = "Change in other vote from previous election by county (%)") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.title = element_blank()) +
+  scale_x_continuous(breaks = c(seq(2000,2016,4))) +
+  scale_colour_manual(values = c("light blue","lightcoral"))  +
   facet_wrap(~mostly.dem)
-scale_fill_manual(values = c("lightcoral", "light blue"))
 historical.oth.vote.perc.graph
 
 # Other numbers
-historical.oth.vote.perc.graph = ggplot(counties.2000.2016,
-                                        aes(x = year, y = oth.vote, colour = winning.party,
-                                            group = county)) +
-  geom_line(stat = "identity") +
-  scale_y_continuous(name = "Overall oth.vote.perc with time by winning party.") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  # scale_x_discrete(
-  #   limit =  counties.2000.2016$ordered.oth.vote.perc,
-  #   labels = as.character(counties.2000.2016$year),
-  #   name = NULL
-  # ) +
+historical.oth.vote.graph.hist = ggplot(counties.2000.2016.2000ppl[counties.2000.2016.2000ppl$year == 2016,],
+                                   aes(x = oth.vote, colour = all.machines,
+                                       group = all.machines)) +
+  geom_histogram()
+historical.oth.vote.graph.hist
+
+historical.oth.vote.graph = ggplot(counties.2000.2016.2000ppl,
+                                   aes(x = year, y = log(oth.vote), colour = all.machines,
+                                       group = all.machines)) +
+  geom_smooth() +
+  scale_y_continuous(name = "Log of average numbers of other voters per county") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.title = element_blank()) +
+  scale_x_continuous(breaks = c(seq(2000,2016,4))) +
+  scale_colour_manual(values = c("light blue","lightcoral"))  +
   facet_wrap(~mostly.dem)
-scale_fill_manual(values = c("lightcoral", "light blue"))
+historical.oth.vote.graph
+
+# Removing Milwaukee and Dane counties ------------------------------------
+corr.table.mildane = with(county.summary.2016.final.2000ppl.mildane, data.frame(dem.change, rep.change,
+                                                                oth.change,swing.turnout.perc,log(total.voting.age),
+                                                                use.machines.prop,dem.wins))
+correlationmatrix.mildane = cor(corr.table.mildane, use = "pairwise.complete.obs")
+corrplot.all = corrplot(correlationmatrix.mildane, method = "number", type = "upper")
+
+
+
+# Other votes
+historical.oth.vote.perc.graph = ggplot(counties.2000.2016.2000ppl.mildane,
+                                        aes(x = year, y = oth.vote.perc, colour = all.machines,
+                                            group = all.machines)) +
+  geom_jitter(alpha = 0.6, width = 0.2) +
+  geom_smooth(size = 2) +
+  scale_y_continuous(name = "Other vote by use of voting machines in county (%)") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.title = element_blank()) +
+  scale_x_continuous(breaks = c(seq(2000,2016,4))) +
+  scale_colour_manual(values = c("light blue","lightcoral")) +
+  facet_wrap(~mostly.dem)
 historical.oth.vote.perc.graph
 
-historical.oth.vote.perc.graph = ggplot(counties.2000.2016,
-                                        aes(x = year, y = oth.vote.perc, colour = winning.party,
-                                            group = county)) +
-  geom_line(stat = "identity") +
-  scale_y_continuous(name = "Overall oth.vote.perc with time by winning party.") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  # scale_x_discrete(
-  #   limit =  counties.2000.2016$ordered.oth.vote.perc,
-  #   labels = as.character(counties.2000.2016$year),
-  #   name = NULL
-  # ) +
-  facet_wrap(~all.machines)
-scale_fill_manual(values = c("lightcoral", "light blue"))
+historical.oth.vote.perc.graph = ggplot(counties.2000.2016.2000ppl.mildane,
+                                        aes(x = year, y = oth.change, colour = all.machines,
+                                            group = all.machines)) +
+  geom_jitter(alpha = 0.6, width = 0.2) +
+  geom_smooth() +
+  scale_y_continuous(name = "Change in other vote from previous election by county (%)") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.title = element_blank()) +
+  scale_x_continuous(breaks = c(seq(2000,2016,4))) +
+  scale_colour_manual(values = c("light blue","lightcoral"))  +
+  facet_wrap(~mostly.dem)
 historical.oth.vote.perc.graph
+
+# Other numbers
+historical.oth.vote.graph = ggplot(counties.2000.2016.2000ppl.mildane,
+                                   aes(x = year, y = oth.vote, colour = all.machines,
+                                       group = all.machines)) +
+  geom_smooth() +
+  scale_y_continuous(name = "Average numbers of other voters per county") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.title = element_blank()) +
+  scale_x_continuous(breaks = c(seq(2000,2016,4))) +
+  scale_colour_manual(values = c("light blue","lightcoral"))  +
+  facet_wrap(~mostly.dem)
+historical.oth.vote.graph
+
+# Other numbers
+historical.oth.vote.graph = ggplot(counties.2000.2016.2000ppl.mildane,
+                                   aes(x = year, y = oth.vote, colour = all.machines,
+                                       group = county)) +
+  geom_smooth() +
+  scale_y_continuous(name = "Average numbers of other voters per county") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.title = element_blank()) +
+  scale_x_continuous(breaks = c(seq(2000,2016,4))) +
+  scale_colour_manual(values = c("light blue","lightcoral")) +
+  facet_wrap(~mostly.dem)
+historical.oth.vote.graph
+
 
 
 # Voting machines in counties ---------------------------------------------
