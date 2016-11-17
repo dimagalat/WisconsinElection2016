@@ -15,6 +15,12 @@ knitr::opts_chunk$set(echo = TRUE)
 require(ggplot2); library(plotly);require(devtools); library(XML); require(rvest); require(stringr);require(xlsx);require(dplyr);require(plyr)
 require(agricolae); require(ggplot2); library(gridExtra); library(tidyr)
 
+# I got this from here: http://stackoverflow.com/questions/31337922/adding-italicised-r-with-correlation-coefficient-to-a-scatter-plot-chart-in-ggpl
+corr_eqn <- function(x,y, digits = 2) {
+  corr_coef <- round(cor(x, y), digits = digits)
+  paste("italic(r) == ", corr_coef)
+}
+
 default.margin = list(l = 100, r = 80, b = 80, t = 20, pad = 4)
 colours = c("grey", "lightcoral", "dark grey", "light blue", "light green","grey","grey")
 
@@ -70,13 +76,19 @@ poll.summary.2012$diff.from.polls.defs = with(poll.summary.2012, vote.perc - pol
 poll.summary.2012.nounds = poll.summary.2012[1:3,]
 
 ## VISUALISING THE 2016 RESULTS
-county.summary.compare = subset(counties.2000.2016, year == 2016)
+county.summary.2016.final = subset(counties.2000.2016, year == 2016)
 county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$county), ]
-added.columns = county.summary.compare[,20:28]
+added.columns = county.summary.2016.final[,20:28]
 county.2016.vs.2012 = cbind(county.2016.vs.2012, added.columns)
 
-county.2016.vs.2012$total.voters.age.est= as.integer(county.2016.vs.2012$total.voters.age.est)
+county.2016.vs.2012$total.voting.age= as.integer(county.2016.vs.2012$total.voters.age.est)
 county.2016.vs.2012.5000 = subset(county.2016.vs.2012, total.voters.age.est > 5000)
+
+county.summary.2016.final$mostly.dem.num = ifelse(county.summary.2016.final$mostly.dem == "Mostly Dem",1,0)
+
+county.summary.2016.final.highpop = subset(county.summary.2016.final, total.voting.age > mean(total.voting.age))
+county.summary.2016.final$total.voting.age= as.integer(county.summary.2016.final$total.voting.age)
+county.summary.2016.final.5000= subset(county.summary.2016.final, total.voting.age > 5000)
 
 ```
 # Introduction
@@ -323,9 +335,9 @@ ggplotly(county.perc.turnout.dems, session = "knitr")
 
 ```
 
-The following figure confirms that for many counties, the vote swung from Democrat to Republican 
+The following figures confirm that for many counties, the vote swung significantly from Democrat to Republican. However, there is no single county that stands out in terms of an unusual switch from Democrat to Republican between 2012 and 2016. Also, the turnout does not seem to be related to the % switch from Democrat to Republican.
 
-```{r swing 2012, echo = f, fig.cap="Percentage vote difference in 2012 and 2016 by county.Grey bars are 2012 results,\nred bars are overlaid 2016 results. Negative = Democrat win, positive = Republican win"}
+```{r swing 2012, echo = F, fig.cap="Percentage vote difference in 2012 and 2016 by county.Grey bars are 2012 results,\nred bars are overlaid 2016 results. Negative = Democrat win, positive = Republican win"}
 
 # Visualising county data 2012 vs 2016
   county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$diff.2012.perc), ]
@@ -341,7 +353,7 @@ county.2012v2016.perc.diff.2016ord = ggplot(county.2016.vs.2012,
   ) +
   scale_y_continuous(
     name = "Vote difference in 2012 and 2016 by county (%), negative = Democrat, positive = Republican ") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 4)) +
   scale_x_discrete(
     limit =  county.2016.vs.2012$ordered.county.2012.perc.diff,
     labels = as.character(county.2016.vs.2012$county),
@@ -351,6 +363,7 @@ county.2012v2016.perc.diff.2016ord = ggplot(county.2016.vs.2012,
 county.2012v2016.perc.diff.2016ord
 
 ```
+
 ```{r swing2012to2016demtorepublican, echo = F, fig.cap= "Swing percentage between 2012 and 2016 by county. Blue/red bars indicate percentage swing, below 0 = swing to Democrat, above 0 = swing to Republican. Grey bars are percentage swing in turnout."}
 
 # Visualising the swing in votes
@@ -368,7 +381,7 @@ county.2012v2016.swing.perc = ggplot(county.summary.2016.final,
                                          width = 0.4) +
   scale_y_continuous(
     name = "Difference in vote between Democrats and Republicans (2016)") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 4)) +
   scale_x_discrete(
     limit =  county.summary.2016.final$ordered.county.swing.perc,
     labels = as.character(county.summary.2016.final$county),
@@ -379,9 +392,116 @@ county.2012v2016.swing.perc
 
 ```
 
+The following figure shows that there was not a strong correlation between percentage change in turnout between 2012 and 2016 and the counties that have mostly chosen Democrat or Republican in the last five elections.
 
 
-The 'other' vote could not 
+```{r turnout Dem Rep, echo = F, fig.cap="Swing in turnout between 2012 and 2016 by county and by whether the county has mostly chosen Democrat or Republican in the last five Presidential elections (%)."}
+county.summary.2016.final = county.summary.2016.final[order(county.summary.2016.final$swing.turnout.perc), ]
+county.summary.2016.final$ordered.turnout.diff = c(1:length(county.summary.2016.final$swing.turnout.perc))
+
+turnout.diff.perc.graph = ggplot(county.summary.2016.final,
+                                 aes(x = ordered.turnout.diff, y = swing.turnout.perc,
+                                     fill = mostly.dem)) +
+  geom_bar(stat = "identity") +
+  scale_y_continuous(name = "Swing in turnout between 2012 and 2016 (%).") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 4)) +
+  scale_x_discrete(
+    limit =  county.summary.2016.final$ordered.turnout.diff,
+    labels = as.character(county.summary.2016.final$county),
+    name = NULL
+  ) +
+  scale_fill_manual(values = c("light blue", "lightcoral"))
+turnout.diff.perc.graph
+
+```
+
+(Note: some of the following graphs have been subset to remove the three outlier counties that has a very low voting age population in 2016, and were highly skewing the output when considering % change in vote)
+
+How about the swing away from Democrat, and the swing to 'other'? Was this at all unusual? The following shows that these factors were not well correlated with the change in turnout
+
+```{r democrat vote change by turnout, echo=F, fig.cap="Change between 2012 and 2016 in percentage voting Democrat by change in county turnout (%). Colours indicate counties that have mostly chosen Democrat or Republican in 2000 - 2016. Line indicates linear fitted mean, and 'r' indicates the correlation between these variables."}
+  county.2012v2016.change.dem.perc.point = ggplot(county.summary.2016.final.5000,
+                                                  aes(x = swing.turnout.perc, y = dem.change, colour = winner)) +
+    geom_smooth(alpha = 0.5, colour = "grey", method = "lm", se = F) +
+    geom_point(stat = "identity") +
+    scale_y_continuous(
+      name = "Change in vote for Democrats 2012 - 2016 (%)"
+    ) +
+    scale_x_continuous(
+      name = "Change in turnout 2012 - 2016 (%)"
+    ) +
+    geom_text(x = -8, y = 2,
+              label = corr_eqn(county.summary.2016.final.5000$swing.turnout.perc,
+                               county.summary.2016.final.5000$dem.change), parse = TRUE,
+              show.legend = F, colour = "black") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    scale_colour_manual(values = c("light blue", "lightcoral"))
+  county.2012v2016.change.dem.perc.point
+```
 
 
+```{r other vote by turnout, echo=F, fig.cap="Change between 2012 and 2016 in percentage voting other by change in county turnout (%). Colours indicate counties that have mostly chosen Democrat or Republican in 2000 - 2016. Line indicates linear fitted mean, and 'r' indicates the correlation between these variables."}
+county.2012v2016.change.oth.perc.point = ggplot(county.summary.2016.final.5000,
+                                                aes(x = swing.turnout.perc, y = oth.change, colour = winner)) +
+  geom_smooth(alpha = 0.5, colour = "grey", method = "lm", se = F) +
+  geom_point(stat = "identity") +
+  scale_y_continuous(
+    name = "Change in vote for other 2012 - 2016 (%)"
+  ) +
+    scale_x_continuous(
+      name = "Change in turnout 2012 - 2016 (%)"
+    ) +
+  geom_text(x = -8, y = 5,
+            label = corr_eqn(county.summary.2016.final.5000$swing.turnout.perc,
+                              county.summary.2016.final.5000$oth.change), parse = TRUE,
+            show.legend = F, colour = "black") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_colour_manual(values = c("light blue", "lightcoral"))
+county.2012v2016.change.oth.perc.point
 
+
+```
+
+Finally, we do see a correlation between the change in county votes for Democrat and other (0.5). This figure suggests that the counties that rejected the Democrats most were more likely to vote for Trump rather than another candidate, while those with a small reduction in Democrat votes were more likely to vote other.
+
+```{r dem.change vs oth.change correlation, echo = F}
+  county.2012v2016.change.oth.dem.point = ggplot(county.summary.2016.final.5000,
+                                                 aes(x = dem.change, y = oth.change, colour = winner)) +
+    geom_smooth(alpha = 0.5, colour = "grey", method = "lm", se = F) +
+    geom_point(stat = "identity") +
+    scale_y_continuous(
+      name = "Change in voting other from 2012 (%)."
+    ) +
+    scale_x_continuous(
+      name = "Change in Democrat from 2012 - 2016 (%)"
+    ) +
+    geom_text(x = 0, y = 5,
+              label = corr_eqn(county.summary.2016.final.5000$dem.change,
+                               county.summary.2016.final.5000$oth.change), parse = TRUE,
+              show.legend = F, colour = "black") +
+    theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
+    scale_colour_manual(values = c("light blue", "lightcoral"))
+  county.2012v2016.change.oth.dem.point
+
+```
+
+The above results can be summarised in a correlation matrix (see below)
+
+```{r correlation.table, echo=F, fig.height=10, fig.width=10}
+require(corrplot)
+corr.table = with(county.summary.2016.final.5000, data.frame(dem.change, rep.change,                                                  oth.change,perc.diff,swing.turnout.perc,total.voting.age,                                               use.machines.prop,dem.wins))
+colnames(corr.table) = c("Change Democrat vote %", "Change Republican vote %",
+                         "Change Other vote %", "Difference Dem - Rep vote %", "Change turnout %",
+                         "No. voting age persons","% municipalities with machines","Elections won by Democrats 2000-2016")
+correlationmatrix = cor(corr.table, use = "pairwise.complete.obs")
+corrplot.all = corrplot(correlationmatrix, method = "number", type = "upper")
+corrplot.all
+```
+Unfortunately, the above correlation matrix cannot help us to understand the influence of voting machines alone on change in Democrat or Republican votes, as it is highly correlated with the voting age population. This suggests that voting machines are mostly installed in high-population counties, and these counties are more likely to vote Democrat. 
+
+It is very difficult to untangle these effects, and so it is not worth looking further in this direction.
+
+
+However, if we look at 'change in other', we can see that it is quite highly correlated with the increase in voting machines, but is not correlated with the change in turnout, the number of people in the county, or the number of previous elections won by Democrats. Therefore, votes for 'other' candidates did not depend on county population, the historical party preference of the county, or lack of voters coming to the polls. Only the presence of voting machines appears to affect this value.
+
+We need to look at this further.
