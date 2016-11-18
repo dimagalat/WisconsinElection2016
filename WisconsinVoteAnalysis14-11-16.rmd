@@ -14,6 +14,8 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+options(scipen=999) # Effectively disables scientific numbering
+
 require(ggplot2); library(plotly);require(devtools); library(XML); require(rvest); require(stringr);require(xlsx);require(dplyr);require(plyr)
 require(agricolae); require(ggplot2); library(gridExtra); library(tidyr); require(corrplot)
 
@@ -451,7 +453,7 @@ county.2012v2016.perc.diff.2016ord
 ```
 Although there was a significant swing from Democrat to Republican in many counties, in such a close election race, only small amounts of manipulation would be necessary to swing a few thousand votes here and there to change the result. Ideally, to investigate this further, I would go down to the next voting level to check for outliers or other unusual trends (the level of ward/municipality). However, this information being lacking, I can instead stay at the county level, and look at whether the presence of electronic voting machines was at all linked to the voting outcome.
 
-## I cannot confirm that voting machine presence is linked to voting patterns
+## It is not possible to confirm that voting machine presence is linked to voting patterns
 One interesting dataset provided by the Wisconsin Election Commission is the presence of voting machines on a ward-by-ward basis. I made the assumption that any manipulation of the election results would be more likely to occur in wards / counties that have a higher proportion of voting machines. I have incorporated this information into the data.
 
 ```{r machines by county, echo = F, fig.cap="*Presence of voting machines by county, with primary machine vendor / supplier*"}
@@ -519,7 +521,7 @@ Now we can see that the change in vote for other between 2012 and 2016 is highly
 
 Anyway, we are back to square 1. Since the results are not consistent when using the original turnout numbers or the logged turnout numbers, we cannot conclude that the other vote change was linked to voting machines, and not just overall turnout. This outcome is illustrated below.
 
-```{r correlation turnout with other, echo=F, fig.cap="*The correlation between the change in vote for other candidates between 2012 and 2016 with the voter turnout by county, on left non-transormed, and on right transformed by the natural log*"}
+```{r correlation turnout with other, echo=F, fig.cap="*The correlation between the change in vote for other candidates between 2012 and 2016 with the voter turnout by county, on top non-transormed, and on bottom transformed by the natural log*"}
 # Change in those voting 'other' between 2012 and 2016 by absolute turnout
 # {
   county.2012v2016.change.oth.turnout.point = ggplot(county.summary.2016.final.2000ppl,
