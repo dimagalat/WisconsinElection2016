@@ -1,5 +1,5 @@
 ---
-title: "Analysis of the 2016 Wisconsin vote"
+title: "Analysis of the November 2016 Wisconsin election"
 author: "Sean Case"
 date: "18 November 2016"
 output:
