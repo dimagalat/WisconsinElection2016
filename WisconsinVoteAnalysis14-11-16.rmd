@@ -6,6 +6,8 @@ output:
   html_document:
     toc: true
     toc_depth: 2
+    theme: journal
+    highlight: tango
   pdf_document: default
   word_document:
     fig_caption: yes
@@ -126,7 +128,7 @@ I had a few questions before going into this analysis. Were the 2016 Wisconsin e
 # State level analysis
 ## The results did not deviate greatly from the national vote
 
-Nationally, 47.2% voted for Trump vs 47.9% for Clinton nationally, leaving other candidates with 4.9% (uselectionatlas.org). In Wisconsin (with 95% votes counted at time of writing), Donald Trump won with 47.9% of the vote compared to the 46.9% of Clinton, a difference of only ~27,000 votes. The majority of 'other' voters went for Gary Johnson (3.6 of the 5.1% who voted 'other' in Wisconsin), and Jill Stein received just over 1%, both close to their national averages. 
+Nationally, 47.2% voted for Trump vs 47.9% for Clinton nationally, leaving other candidates with 4.9% [uselectionatlas.org](uselectionatlas.org). In Wisconsin (with 95% votes counted at time of writing), Donald Trump won with 47.9% of the vote compared to the 46.9% of Clinton, a difference of only ~27,000 votes. The majority of 'other' voters went for Gary Johnson (3.6 of the 5.1% who voted 'other' in Wisconsin), and Jill Stein received just over 1%, both close to their national averages. 
 
 So far, nothing strange. 
 
@@ -652,3 +654,5 @@ In general, the Wisconsin 2016 elections fell within historical ranges in terms 
 I checked the results of the Wisconsin election at the county level to see if there was anything unusual. Changes in voting patterns in 2016 could not be attributed to historical county loyalty to one party or another, or a drop in turnout that affected one party more than another. County population (possibly an indicator of the urban-rural divide), was highly linked to votes for one party over another. County population was also closely linked to the number of voting machines used in the county. There is a potentially interesting trend in terms of the vote for 'Other' candidates in 2016, which is linked to the presence of voting machines in the county; however on further analysis this could not be disentangled from the influence of county population size.
 
 Unfortunately, this meant that it was not possible to separate the effects of turnout number and voting machines on county level voting in Wisconsin in 2016. To fully investigate a potential influence of voting machines further, we need the voting data at the level of voting ward / municipality. This is especially important in counties with high populations, e.g. Milwaukee, where small changes in turnout and vote preference in 2016 could have significantly affected the result.
+
+**Click [here](https://sean-case.github.io/wisconsinvotes/index.html) to go back to the blog home page.**
