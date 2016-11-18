@@ -1014,8 +1014,10 @@ county.summary.2016.final.2000ppl= subset(county.summary.2016.final, turnout > 2
 county.summary.2016.final.2000ppl.mildane= subset(county.summary.2016.final.2000ppl, county != "Milwaukee" & county != "Dane")
 
 counties.2000.2016.2000ppl= subset(counties.2000.2016, turnout > 2000)
-
 counties.2000.2016.2000ppl.mildane = subset(counties.2000.2016.2000ppl, county != "Milwaukee" & county != "Dane")
+
+counties.2000.2016.2000ppl$medturnout = with(counties.2000.2016.2000ppl, ifelse(turnout > median(turnout),
+                                                                                "High voter turnout county","Low voter turnout county"))
 
 # Comparing 2016 candidate results overall -------------------------------------
 # The majority of 'other' voters went for Gary Johnson. Hillary massively underperformed compared
@@ -1908,12 +1910,11 @@ other.turnout.2016.2012.compare = marrangeGrob(
   top = NULL)
 other.turnout.2016.2012.compare
 
-# Looking at County data through time -------------------------------------
+# Looking at County data through time 2000-2016 -------------------------------------
 # counties.2000.2016 = counties.2000.2016[order(counties.2000.2016$turnout), ]
 # counties.2000.2016$ordered.turnout = c(1:length(counties.2000.2016$year))
 
-### Other votes
-
+### Other votes by party
 historical.oth.vote.perc.graph = ggplot(counties.2000.2016.2000ppl,
                                         aes(x = year, y = oth.vote.perc, colour = all.machines,
                                             group = all.machines)) +
@@ -1954,6 +1955,53 @@ historical.oth.vote.graph = ggplot(counties.2000.2016.2000ppl,
   scale_x_continuous(breaks = c(seq(2000,2016,4))) +
   scale_colour_manual(values = c("light blue","lightcoral"))  +
   facet_wrap(~mostly.dem)
+historical.oth.vote.graph
+
+
+### Other votes by turnout
+counties.2000.2016.2000ppl$medturnout = with(counties.2000.2016.2000ppl, ifelse(turnout > median(turnout),
+                                                                "High voter turnout county","Low voter turnout county"))
+
+historical.oth.vote.perc.graph = ggplot(counties.2000.2016.2000ppl,
+                                        aes(x = year, y = oth.vote.perc, colour = all.machines,
+                                            group = all.machines)) +
+  geom_jitter(alpha = 0.6, width = 0.2) +
+  geom_smooth(size = 2) +
+  scale_y_continuous(name = "Other vote by use of voting machines in county (%)") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.title = element_blank()) +
+  scale_x_continuous(breaks = c(seq(2000,2016,4))) +
+  scale_colour_manual(values = c("light blue","lightcoral"))  +
+  facet_wrap(~medturnout)
+historical.oth.vote.perc.graph
+
+historical.oth.vote.perc.change.graph = ggplot(counties.2000.2016.2000ppl,
+                                               aes(x = year, y = oth.change, colour = all.machines,
+                                                   group = all.machines)) +
+  geom_jitter(alpha = 0.6, width = 0.2) +
+  geom_smooth() +
+  scale_y_continuous(name = "Change in other vote from previous election by county (%)") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.title = element_blank()) +
+  scale_x_continuous(breaks = c(seq(2000,2016,4))) +
+  scale_colour_manual(values = c("light blue","lightcoral"))  +
+  facet_wrap(~medturnout)
+historical.oth.vote.perc.change.graph
+
+# Other numbers
+historical.oth.vote.graph.hist = ggplot(counties.2000.2016.2000ppl[counties.2000.2016.2000ppl$year == 2016,],
+                                        aes(x = oth.vote, colour = all.machines,
+                                            group = all.machines)) +
+  geom_histogram()
+historical.oth.vote.graph.hist
+
+historical.oth.vote.graph = ggplot(counties.2000.2016.2000ppl,
+                                   aes(x = year, y = log(oth.vote), colour = all.machines,
+                                       group = all.machines)) +
+  geom_smooth() +
+  scale_y_continuous(name = "Log of average numbers of other voters per county") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.title = element_blank()) +
+  scale_x_continuous(breaks = c(seq(2000,2016,4))) +
+  scale_colour_manual(values = c("light blue","lightcoral"))  +
+  facet_wrap(~medturnout)
 historical.oth.vote.graph
 
 # Removing Milwaukee and Dane counties ------------------------------------
