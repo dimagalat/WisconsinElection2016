@@ -27,7 +27,7 @@ colours = c("grey", "lightcoral", "dark grey", "light blue", "light green","grey
 library(plotly)
 py <- plot_ly(username="SeanCase", key="••••••••••")
 
-setwd("https://github.com/Sean-Case/WisconsinElection2016")
+setwd("https://github.com/Sean-Case/WisconsinElection2016") # Change this to the location of your downloaded data files
 
 candidate.2016.summary = read.csv("candidate.2016.summary.csv")
 counties.2016.bycand = read.csv("counties.2016.bycand.csv")
