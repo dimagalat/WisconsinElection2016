@@ -25,7 +25,7 @@ default.margin = list(l = 100, r = 80, b = 80, t = 20, pad = 4)
 colours = c("grey", "lightcoral", "dark grey", "light blue", "light green","grey","grey")
 
 library(plotly)
-py <- plot_ly(username="SeanCase", key="••••••••••")
+py <- plot_ly(username="", key="") # Enter your own plotly username and key
 
 setwd("https://github.com/Sean-Case/WisconsinElection2016") # Change this to the location of your downloaded data files
 
