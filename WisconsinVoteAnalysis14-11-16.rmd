@@ -101,6 +101,10 @@ counties.2000.2016.2000ppl= subset(counties.2000.2016, turnout > 2000)
 
 counties.2000.2016.2000ppl.mildane = subset(counties.2000.2016.2000ppl, county != "Milwaukee" & county != "Dane")
 
+
+counties.2000.2016.2000ppl$medturnout = with(counties.2000.2016.2000ppl, ifelse(turnout > median(turnout),
+                                                                                "High voter turnout county","Low voter turnout county"))
+
 ```
 
 # Summary
