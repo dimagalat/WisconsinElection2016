@@ -624,6 +624,8 @@ county.summary.2016.final$county = as.character(county.summary.2016.final$county
     county.summary.2012.final$rep.vote.perc
   county.summary.2016.final$oth.change = county.summary.2016.final$oth.vote.perc -
     county.summary.2012.final$oth.vote.perc
+  county.summary.2016.final$turnout.change = county.summary.2016.final$turnout.perc -
+    county.summary.2012.final$turnout.perc
 
   county.summary.2016.final$swing.num = with(county.summary.df, num.diff - diff.2012.num)
   county.summary.2016.final$swing.perc = with(county.summary.df, perc.diff - diff.2012.perc)
@@ -631,7 +633,6 @@ county.summary.2016.final$county = as.character(county.summary.2016.final$county
   county.summary.2016.final$swing.turnout.perc = with(county.summary.df,
                                               turnout.perc.allage.est - turnout.2012.perc)
 
-  # rbind(county.summary.2012.final,county.summary.2012.final)
 } # 2012 county data frame
 { # 2008 county data frame
   election.2008 = read.csv("Historical elections\\2008_FallElection_President_WardbyWardMOD.csv",
@@ -675,7 +676,6 @@ county.summary.2016.final$county = as.character(county.summary.2016.final$county
   county.summary.2012.final$swing.num = county.summary.2012.final$num.diff - election.2008.final$num.diff
   county.summary.2012.final$swing.perc =   county.summary.2012.final$perc.diff - election.2008.final$perc.diff
   county.summary.2012.final$swing.turnout = county.summary.2012.final$turnout - election.2008.final$turnout
-  county.summary.2012.final$swing.turnout.perc = NA
 
   county.summary.2012.final$dem.change = county.summary.2012.final$dem.vote.perc -
     election.2008.final$dem.vote.perc
@@ -683,6 +683,13 @@ county.summary.2016.final$county = as.character(county.summary.2016.final$county
     election.2008.final$rep.vote.perc
   county.summary.2012.final$oth.change = county.summary.2012.final$oth.vote.perc -
     election.2008.final$oth.vote.perc
+
+  election.2008.final$total.voting.age = county.summary.2012.final$total.voting.age
+  election.2008.final$turnout.perc = (election.2008.final$turnout / election.2008.final$total.voting.age)*100
+
+  county.summary.2012.final$swing.turnout.perc = (county.summary.2012.final$swing.turnout / county.summary.2012.final$total.voting.age)*100
+  county.summary.2012.final$turnout.change = county.summary.2012.final$turnout.perc -
+    election.2008.final$turnout.perc
 
   election.2008.final$swing.num = NA
   election.2008.final$swing.perc =   NA
@@ -740,6 +747,14 @@ county.summary.2016.final$county = as.character(county.summary.2016.final$county
   election.2008.final$oth.change = election.2008.final$oth.vote.perc -
     election.2004.final$oth.vote.perc
 
+  election.2004.final$total.voting.age = election.2008.final$total.voting.age
+  election.2004.final$turnout.perc = (election.2004.final$turnout / election.2004.final$total.voting.age)*100
+
+  election.2008.final$swing.turnout.perc = (election.2008.final$swing.turnout / election.2008.final$total.voting.age)*100
+  election.2008.final$turnout.change = election.2008.final$turnout.perc -
+    election.2004.final$turnout.perc
+
+
   election.2004.final$swing.num = NA
   election.2004.final$swing.perc =   NA
   election.2004.final$swing.turnout = NA
@@ -795,6 +810,13 @@ county.summary.2016.final$county = as.character(county.summary.2016.final$county
   election.2004.final$oth.change = election.2004.final$oth.vote.perc -
     election.2000.final$oth.vote.perc
 
+
+  election.2000.final$total.voting.age = election.2004.final$total.voting.age
+  election.2000.final$turnout.perc = (election.2000.final$turnout / election.2000.final$total.voting.age)*100
+
+  election.2004.final$swing.turnout.perc = (election.2004.final$swing.turnout / election.2004.final$total.voting.age)*100
+  election.2004.final$turnout.change = election.2004.final$turnout.perc -
+    election.2000.final$turnout.perc
 
   election.2000.final$swing.num = NA
   election.2000.final$swing.perc =   NA
@@ -1913,9 +1935,15 @@ other.turnout.2016.2012.compare
 # Looking at County data through time 2000-2016 -------------------------------------
 # counties.2000.2016 = counties.2000.2016[order(counties.2000.2016$turnout), ]
 # counties.2000.2016$ordered.turnout = c(1:length(counties.2000.2016$year))
+county.turnout = subset(counties.2000.2016.2000ppl, year == 2016)
+county.turnout.lookup = with(county.turnout, (data.frame(county, total.voting.age)))
+
+counties.2000.2016.2000ppl$total.voting.age = NULL
+counties.2000.2016.2000ppl = join(counties.2000.2016.2000ppl,county.turnout.lookup, by="county")
+counties.2000.2016.2000ppl$turnout.perc = (counties.2000.2016.2000ppl$turnout / counties.2000.2016.2000ppl$total.voting.age)*100
+counties.2000.2016.2000ppl$swing.turnout.perc = (counties.2000.2016.2000ppl$swing.turnout / counties.2000.2016.2000ppl$total.voting.age)*100
 
 ##### OTHER VOTES #####
-
 ### Other votes by party
 historical.oth.vote.perc.graph = ggplot(counties.2000.2016.2000ppl,
                                         aes(x = year, y = oth.vote.perc, colour = all.machines,
@@ -1960,7 +1988,6 @@ historical.oth.vote.graph = ggplot(counties.2000.2016.2000ppl,
 historical.oth.vote.graph
 
 
-### Other votes by turnout ####
 counties.2000.2016.2000ppl$medturnout = with(counties.2000.2016.2000ppl, ifelse(turnout > median(turnout),
                                                                 "High voter turnout county","Low voter turnout county"))
 
@@ -2050,6 +2077,60 @@ historical.rep.vote.graph = ggplot(counties.2000.2016.2000ppl,
   scale_colour_manual(values = c("light blue","lightcoral"))  +
   facet_wrap(~mostly.dem)
 historical.rep.vote.graph
+
+
+
+
+##### Turnout perc #####
+
+### Turnout votes
+historical.turnout.perc.graph = ggplot(counties.2000.2016.2000ppl,
+                                        aes(x = year, y = turnout.perc, colour = all.machines,
+                                            group = all.machines)) +
+  geom_jitter(alpha = 0.6, width = 0.2) +
+  geom_smooth(size = 2) +
+  scale_y_continuous(name = "Turnout vote by use of voting machines in county (%)") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.title = element_blank()) +
+  scale_x_continuous(breaks = c(seq(2000,2016,4))) +
+  scale_colour_manual(values = c("light blue","lightcoral"))  +
+  facet_wrap(~mostly.dem)
+historical.turnout.perc.graph
+
+historical.turnout.perc.change.graph = ggplot(counties.2000.2016.2000ppl,
+                                               aes(x = year, y = turnout.change, colour = all.machines,
+                                                   group = all.machines)) +
+  geom_jitter(alpha = 0.6, width = 0.2) +
+  geom_smooth() +
+  scale_y_continuous(name = "Change in Turnout vote from previous election by county (%)") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.title = element_blank()) +
+  scale_x_continuous(breaks = c(seq(2000,2016,4))) +
+  scale_colour_manual(values = c("light blue","lightcoral"))  +
+  facet_wrap(~mostly.dem)
+historical.turnout.perc.change.graph
+
+# Other numbers
+historical.turnout.vote.graph.hist = ggplot(counties.2000.2016.2000ppl[counties.2000.2016.2000ppl$year == 2016,],
+                                        aes(x = turnout.vote, colour = all.machines,
+                                            group = all.machines)) +
+  geom_histogram()
+historical.turnout.vote.graph.hist
+
+historical.turnout.vote.graph = ggplot(counties.2000.2016.2000ppl,
+                                   aes(x = year, y = turnout.vote, colour = all.machines,
+                                       group = all.machines)) +
+  geom_smooth() +
+  scale_y_continuous(name = "Average numbers of other voters per county") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.title = element_blank()) +
+  scale_x_continuous(breaks = c(seq(2000,2016,4))) +
+  scale_colour_manual(values = c("light blue","lightcoral"))  +
+  facet_wrap(~mostly.dem)
+historical.turnout.vote.graph
+
+
+
+
+
+
 
 
 # Removing Milwaukee and Dane counties ------------------------------------
