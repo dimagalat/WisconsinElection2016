@@ -4,10 +4,10 @@ author: "Sean Case"
 date: "18 November 2016"
 output:
   html_document:
-    toc: true
-    toc_depth: 2
-    theme: journal
     highlight: tango
+    theme: journal
+    toc: yes
+    toc_depth: 2
   pdf_document: default
   word_document:
     fig_caption: yes
@@ -149,7 +149,7 @@ As a reminder, in the following analysis, I class a county with 'mostly voting m
 
 Let's first look at the average 2016 county turnout by voting machines and by counties that were won mostly by Democrats or Republicans since the 2000 presidential election. We can see that there is a 4% higher turnout in mostly Republican-voting counties with voting machines compared to mostly Democrat-voting counties with voting machines. The same difference is not visible in counties without voting machines.
 
-```{r vote machine overall, fig.height=6, fig.width=8}
+```{r vote machine overall, fig.height=6, fig.width=8, message=FALSE, warning=FALSE, echo = FALSE}
  county.2012v2016.perc.diff.2016ord = ggplot(county.2016.machines.mostlydem.group,
                                               aes(x = mostly.dem, y = turnout.perc.2016,
                                                   fill = mostly.dem
@@ -174,7 +174,7 @@ Let's first look at the average 2016 county turnout by voting machines and by co
 
 Looking at this at a more granular level, let's divide counties according to how many times that democrats have won the county since 2000. Again, we can see that in counties with a lower number of Democrat wins since 2000, there is a higher turnout in 'voting machine' counties; 5% for counties with no Democrat wins.
 
-```{r vote machine dem wins no, fig.height=6, fig.width=10}
+```{r vote machine dem wins no, fig.height=6, fig.width=10, message=FALSE, warning=FALSE, echo = FALSE}
   county.2016.machines.mostlydemwins.group = county.2016.machines.mostlydemwins.group[
     order(as.integer(county.2016.machines.mostlydemwins.group$dem.wins)),]
 
@@ -199,7 +199,7 @@ So we can see from the publicly-available data that in the 2016 election, mostly
 
 I also took a look at the counties that could be most responsible for this difference in turnout. In the following figure, I have ordered the counties from low to high turnout. The y axis shows the difference between Republican and Democrat vote in the county, and blue bars show counties with mostly voting machines vs red bars with less or none. From this figure, I would suggest that the Republican-voting counties with voting machines and a higher than average turnout are a priority for investigation, namely Ozaukee, Waukesha, Washington, Vilas, St Croix, and Calumet.
 
-```{r county ordered turnout, fig.height=6, fig.width=10}
+```{r county ordered turnout, fig.height=8, fig.width=12, message=FALSE, warning=FALSE, echo = FALSE}
  county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$turnout.perc.allage.est), ]
   county.2016.vs.2012$ordered.county.2016.turnout = c(1:length(county.2016.vs.2012$turnout.perc.allage.est))
 
