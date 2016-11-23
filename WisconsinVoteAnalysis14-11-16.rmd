@@ -109,6 +109,27 @@ counties.2000.2016.2000ppl.mildane = subset(counties.2000.2016.2000ppl, county !
 counties.2000.2016.2000ppl$medturnout = with(counties.2000.2016.2000ppl, ifelse(turnout > median(turnout),
                                                                                 "High voter turnout county","Low voter turnout county"))
 
+  county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$turnout.perc.allage.est), ]
+  county.2016.vs.2012$ordered.county.2012.turnout = c(1:length(county.2016.vs.2012$turnout.perc.allage.est))
+
+  county.2016.demrep.wins = group_by(county.2016.vs.2012, dem.2016)
+  county.2016.demrep.wins.group = dplyr::summarise(county.2016.demrep.wins,
+    turnout.perc.2016 = mean(turnout.perc.allage.est),
+   turnout.perc.2012 = mean(turnout.2012.perc)
+  )
+
+  county.2016.machines.mostlydem = group_by(county.2016.vs.2012, all.machines,mostly.dem)
+  county.2016.machines.mostlydem.group = dplyr::summarise(county.2016.machines.mostlydem,
+                                                turnout.perc.2016 = mean(turnout.perc.allage.est),
+                                                turnout.perc.2012 = mean(turnout.2012.perc)
+  )
+
+  county.2016.machines.mostlydemwins = group_by(county.2016.vs.2012, all.machines,dem.wins)
+  county.2016.machines.mostlydemwins.group = dplyr::summarise(county.2016.machines.mostlydemwins,
+                                                              turnout.perc.2016 = mean(turnout.perc.allage.est),
+                                                              turnout.perc.2012 = mean(turnout.2012.perc)
+  )
+
 ```
 
 # Summary
@@ -117,6 +138,113 @@ counties.2000.2016.2000ppl$medturnout = with(counties.2000.2016.2000ppl, ifelse(
 * No single county stood out as an outlier when considering voting patterns in the 2016 and 2012 Presidential elections.
 * The increase in the 'other' vote, despite matching national trends, appeared to be unusual when considering results on the county level, as it was correlated with the presence of voting machines in the county. However, this finding was highly skewed by counties with a very large relative population (e.g. Milwaukee), and after further analysis, could not be confirmed.
 * Municipality / ward level voting statistics are needed to disentangle the link between the presence of voting machines and county population size.
+
+
+# Update 23-11-16: Influence of voting machines on turnout
+Following [this article](http://nymag.com/daily/intelligencer/2016/11/activists-urge-hillary-clinton-to-challenge-election-results.html), suggesting that 2016 voter turnout was affected by the presence of voting machines, I have updated by analysis.
+
+The article states "The academics presented findings showing that in Wisconsin, Clinton received 7 percent fewer votes in counties that relied on electronic-voting machines compared with counties that used optical scanners and paper ballots. Based on this statistical analysis, Clinton may have been denied as many as 30,000 votes; she lost Wisconsin by 27,000."
+
+As a reminder, in the following analysis, I class a county with 'mostly voting machines' as one where 75% or more of the voting districts in the county use at least one type of 'Optical/Digital Scan Tabulator'. I have taken the data on voting machine presence from [this file](https://github.com/Sean-Case/WisconsinElection2016/blob/master/Wisconsin%20election%20stats/voting_equipment_by_municipality_09_2016_xlsx_78114.xlsx1207162619.xlsx) - all types of voting equipment under the heading 'Optical/Digital Scan Tabulator' are counted in this calculation, and are henceforth called 'voting machines'. The definition of 'voting machine' in the article I linked above may explain the discrepancy between my findings and theirs.
+
+Let's first look at the average 2016 county turnout by voting machines and by counties that were won mostly by Democrats or Republicans since the 2000 presidential election. We can see that there is a 4% higher turnout in mostly Republican-voting counties with voting machines compared to mostly Democrat-voting counties with voting machines. The same difference is not visible in counties without voting machines.
+
+```{r vote machine overall, fig.height=6, fig.width=8}
+ county.2012v2016.perc.diff.2016ord = ggplot(county.2016.machines.mostlydem.group,
+                                              aes(x = mostly.dem, y = turnout.perc.2016,
+                                                  fill = mostly.dem
+                                                  )) +
+    # geom_bar(
+    #   stat = "identity",
+    #   aes(y = county.2016.machines.mostlydem.group$turnout.perc.2012),
+    #   fill = "grey",
+    #   alpha = 0.5
+    # ) +
+    geom_bar(stat = "identity") +
+    geom_text(label=round(county.2016.machines.mostlydem.group$turnout.perc.2016,0),
+            y = county.2016.machines.mostlydem.group$turnout.perc.2016/2, size = 6) +
+    scale_y_continuous(
+      name = "Percentage turnout in 2016 by mostly Dem voting counties and voting machines.\nGrey bars are 2012 results."
+    ) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.title = element_blank()) +
+    facet_wrap(~all.machines) +
+    scale_fill_manual(values = c("light blue", "lightcoral"))
+  county.2012v2016.perc.diff.2016ord
+```
+
+Looking at this at a more granular level, let's divide counties according to how many times that democrats have won the county since 2000. Again, we can see that in counties with a lower number of Democrat wins since 2000, there is a higher turnout in 'voting machine' counties; 5% for counties with no Democrat wins.
+
+```{r vote machine dem wins no, fig.height=6, fig.width=10}
+  county.2016.machines.mostlydemwins.group = county.2016.machines.mostlydemwins.group[
+    order(as.integer(county.2016.machines.mostlydemwins.group$dem.wins)),]
+
+  county.2012v2016.turnout.demwins = ggplot(county.2016.machines.mostlydemwins.group,
+                                            aes(x = all.machines, y = turnout.perc.2016,
+                                                fill = factor(dem.wins)
+                                            )) +
+  geom_bar(stat = "identity") +
+  geom_text(label=round(county.2016.machines.mostlydemwins.group$turnout.perc.2016,0),
+            y = county.2016.machines.mostlydemwins.group$turnout.perc.2016/2, size = 6) +
+  scale_y_continuous(
+    name = "Percentage turnout in 2016 (%) by no. times since 2000 Democrats\n have won county and presence of voting machines.") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.title.x = element_blank()) +
+  facet_wrap(~dem.wins) +
+  scale_fill_brewer(type = "seq",guide = guide_legend(title = "Dem. wins since 2000"))
+county.2012v2016.turnout.demwins
+
+```
+
+So we can see from the publicly-available data that in the 2016 election, mostly Republican voting counties with voting machines seemed to have a higher turnout than mostly Democrat voting counties with voting machines, which confirms what the article is suggesting.
+
+I also took a look at the counties that could be most responsible for this difference in turnout. In the following figure, I have ordered the counties from low to high turnout. The y axis shows the difference between Republican and Democrat vote in the county, and blue bars show counties with mostly voting machines vs red bars with less or none. From this figure, I would suggest that the Republican-voting counties with voting machines and a higher than average turnout are a priority for investigation, namely Ozaukee, Waukesha, Washington, Vilas, St Croix, and Calumet.
+
+```{r county ordered turnout, fig.height=6, fig.width=10}
+ county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$turnout.perc.allage.est), ]
+  county.2016.vs.2012$ordered.county.2016.turnout = c(1:length(county.2016.vs.2012$turnout.perc.allage.est))
+
+  county.2012v2016.perc.diff.2016ord = ggplot(county.2016.vs.2012,
+                                              aes(x = ordered.county.2016.turnout, y = perc.diff,
+                                                  fill = all.machines)) +
+    geom_bar(stat = "identity") +
+    geom_bar(
+      stat = "identity",
+      aes(y = county.2016.vs.2012$turnout.perc.allage.est - mean(county.2016.vs.2012$turnout.perc.allage.est)),
+      fill = "grey",
+      alpha = 0.5, width = 0.4
+    ) +
+    annotate(
+      "text",
+      x = mean(county.2016.vs.2012$ordered.county.2016.turnout),
+      y = min(county.2016.vs.2012$perc.diff),
+      label = "More votes for Democrats",
+      vjust = 1,
+      hjust = 0.5
+    ) +
+    annotate(
+      "text",
+      x = mean(county.2016.vs.2012$ordered.county.2016.turnout),
+      y = max(county.2016.vs.2012$perc.diff),
+      label = "More votes for Republicans",
+      vjust = 1,
+      hjust = 0.5
+    ) +
+    scale_y_continuous(
+      name = "Percentage vote difference in 2016 by county. Grey bars represent turnout - average county turnout,\nColours represent counties with mostly voting machines - negative values: Democrat win, positive: Republican win"
+    ) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.title = element_blank()) +
+    scale_x_discrete(
+      limit =  county.2016.vs.2012$ordered.county.2016.turnout,
+      labels = as.character(county.2016.vs.2012$county),
+      name = NULL
+    ) +
+    # facet_wrap(~dem.wins)+
+    # scale_fill_brewer(type = "seq")
+    scale_fill_manual(values = c("light blue","lightcoral"))
+  county.2012v2016.perc.diff.2016ord
+```
+
+
 
 # Introduction
 The 2016 Presidential election surprised many with unexpected results in several states that ran counter to the polls, and counter to recent trends in these states. Specifically, the previously-assumed 'safe' states of Wisconsin, Michigan, and Pennsylvania switched from Democrat to Republican, and were key to clinching the victory for Trump.
@@ -455,8 +583,8 @@ county.2012v2016.perc.diff.2016ord
 ```
 Although there was a significant swing from Democrat to Republican in many counties, in such a close election race, only small amounts of manipulation would be necessary to swing a few thousand votes here and there to change the result. Ideally, to investigate this further, I would go down to the next voting level to check for outliers or other unusual trends (the level of ward/municipality). However, this information being lacking, I can instead stay at the county level, and look at whether the presence of electronic voting machines was at all linked to the voting outcome.
 
-## It is not possible to confirm that voting machine presence is linked to voting patterns
-One interesting dataset provided by the Wisconsin Election Commission is the presence of voting machines on a ward-by-ward basis. I made the assumption that any manipulation of the election results would be more likely to occur in wards / counties that have a higher proportion of voting machines. I have incorporated this information into the data.
+## It is not possible to confirm that Optical/digital scan machine presence is linked to voting patterns
+One interesting dataset provided by the Wisconsin Election Commission is the presence of Optical/Digital Scan Tabulator (from now on called voting machines) on a ward-by-ward basis. I made the assumption that any manipulation of the election results would be more likely to occur in wards / counties that have a higher proportion of Optical/Digital Scan Tabulators. I have incorporated this information into the data.
 
 ```{r machines by county, echo = F, fig.cap="*Presence of voting machines by county, with primary machine vendor / supplier*"}
 # Now, let's order the counties by proportion of municipalities using voting machines
