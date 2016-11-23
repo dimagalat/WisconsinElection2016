@@ -44,6 +44,10 @@ all_polls_2012 = read.csv("all_polls_2012.csv")
 all_polls_2016 = read.csv("all_polls_2016.csv")
 selected_polls_2012.sub = read.csv("selected_polls_2012.sub.csv")
 selected_polls_2016.sub = read.csv("selected_polls_2016.sub.csv")
+demographics = read.csv("voterdemographics.csv", stringsAsFactors = F)
+colnames(demographics)[1] = "county"
+demographics$medianhouseholdincome_2009.2013 = as.numeric(demographics$medianhouseholdincome_2009.2013)
+demographics$pop_sq_mile_2010 = as.numeric(demographics$pop_sq_mile_2010)
 
 elections.100.years.summary.2016 = subset(elections.100.years, year == 2016)
 elections.100.years.postwar = subset(elections.100.years, year >= 1948)
@@ -81,6 +85,9 @@ poll.summary.2012$diff.from.polls.defs = with(poll.summary.2012, vote.perc - pol
 
 poll.summary.2012.nounds = poll.summary.2012[1:3,]
 ## VISUALISING THE 2016 RESULTS
+county.2016.vs.2012 = join(county.2016.vs.2012, demographics, by = "county")
+counties.2000.2016 = join(counties.2000.2016, demographics, by = "county")
+
 county.summary.2016.final = subset(counties.2000.2016, year == 2016)
 county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$county), ]
 added.columns = county.summary.2016.final[,20:28]

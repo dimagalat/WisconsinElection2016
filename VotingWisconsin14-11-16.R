@@ -979,6 +979,10 @@ all_polls_2012 = read.csv("all_polls_2012.csv")
 all_polls_2016 = read.csv("all_polls_2016.csv")
 selected_polls_2012.sub = read.csv("selected_polls_2012.sub.csv")
 selected_polls_2016.sub = read.csv("selected_polls_2016.sub.csv")
+demographics = read.csv("voterdemographics.csv", stringsAsFactors = F)
+colnames(demographics)[1] = "county"
+demographics$medianhouseholdincome_2009.2013 = as.numeric(demographics$medianhouseholdincome_2009.2013)
+demographics$pop_sq_mile_2010 = as.numeric(demographics$pop_sq_mile_2010)
 
 elections.100.years.summary.2016 = subset(elections.100.years, year == 2016)
 elections.100.years.postwar = subset(elections.100.years, year >= 1948)
@@ -996,7 +1000,6 @@ candidate.2016.summary$polls.nov.def = with(poll.summary.2016, c(polls.nov.def[1
 
 candidate.2016.summary$diff.from.poll = candidate.2016.summary$votes.perc.group - candidate.2016.summary$polls.nov
 candidate.2016.summary$diff.from.poll.defs = candidate.2016.summary$votes.perc.group - candidate.2016.summary$polls.nov.def
-
 
 ### 2012 results ###
 elections.100.years.summary.2012 = elections.100.years.postwar[2,]
@@ -1017,12 +1020,15 @@ poll.summary.2012$diff.from.polls.defs = with(poll.summary.2012, vote.perc - pol
 poll.summary.2012.nounds = poll.summary.2012[1:3,]
 
 ## VISUALISING THE 2016 RESULTS
+county.2016.vs.2012 = join(county.2016.vs.2012, demographics, by = "county")
+counties.2000.2016 = join(counties.2000.2016, demographics, by = "county")
+
 county.summary.2016.final = subset(counties.2000.2016, year == 2016)
 county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$county), ]
 added.columns = county.summary.2016.final[,20:28]
 county.2016.vs.2012 = cbind(county.2016.vs.2012, added.columns)
-
 county.2016.vs.2012$total.voting.age= as.integer(county.2016.vs.2012$total.voters.age.est)
+
 county.2016.vs.2012.2000ppl = subset(county.2016.vs.2012, turnout > 2000)
 
 county.2016.vs.2012.2000ppl.mildane= subset(county.2016.vs.2012.2000ppl, county != "Milwaukee" & county != "Dane")
@@ -1782,12 +1788,35 @@ county.2012v2016.change.oth.perc.point
 
 
 # Correlation plot --------------------------------------------------------
-plot(log(county.summary.2016.final.2000ppl$total.voting.age))
-plot(county.summary.2016.final.2000ppl$total.voting.age)
+# plot(log(county.summary.2016.final.2000ppl$total.voting.age))
+# plot(county.summary.2016.final.2000ppl$total.voting.age)
 
+## With turnout not logged
+corr.table = with(county.summary.2016.final.2000ppl, data.frame(dem.change, rep.change,
+                                                                oth.change,swing.turnout.perc,turnout,
+                                                                use.machines.prop, Method_2016.1paperonly.2.paper.machine.combo,
+                                                                dem.wins,
+                                                                ratio_white_nonwhite,ratio_white_black,
+                                                                ratio_nocollege_college,medianhouseholdincome_2009.2013,
+                                                                pop_sq_mile_2010
+))
+colnames(corr.table)[7] = "voting.method"
+colnames(corr.table)[12] = "med.income"
+correlationmatrix = cor(corr.table, use = "pairwise.complete.obs")
+corrplot.all = corrplot(correlationmatrix, method = "number", type = "upper")
+
+
+# With turnout logged
 corr.table = with(county.summary.2016.final.2000ppl, data.frame(dem.change, rep.change,
                                                   oth.change,swing.turnout.perc,log(turnout),
-                                                  use.machines.prop,dem.wins))
+                                                  use.machines.prop, Method_2016.1paperonly.2.paper.machine.combo,
+                                                  dem.wins,
+                                                  ratio_white_nonwhite,ratio_white_black,
+                                                  ratio_nocollege_college,medianhouseholdincome_2009.2013,
+                                                  pop_sq_mile_2010
+                                                  ))
+colnames(corr.table)[7] = "voting.method"
+colnames(corr.table)[12] = "med.income"
 correlationmatrix = cor(corr.table, use = "pairwise.complete.obs")
 corrplot.all = corrplot(correlationmatrix, method = "number", type = "upper")
 
@@ -2496,5 +2525,188 @@ historical.turnout.perc.graph
 #   scale_x_continuous(breaks = c(seq(2000,2016,4))) +
 #   scale_colour_manual(values = c("light blue","lightcoral"))
 # historical.turnout.perc.change.graph
+}
+
+
+
+# Turnout comparisons vote machines changed to voting method -----------------------------------------------------
+# 2016 vs 2012
+# Ordering by turnout percentage, setup summarised data frames
+{
+  county.2016.vs.2012$Method_2016.1paperonly.2.paper.machine.combo = as.factor(
+    county.2016.vs.2012$Method_2016.1paperonly.2.paper.machine.combo
+
+    counties.2000.2016.2000ppl$Method_2016.1paperonly.2.paper.machine.combo = as.factor(
+      counties.2000.2016.2000ppl$Method_2016.1paperonly.2.paper.machine.combo
+  )
+
+  county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$turnout.perc.allage.est), ]
+  county.2016.vs.2012$ordered.county.2012.turnout = c(1:length(county.2016.vs.2012$turnout.perc.allage.est))
+
+  county.2016.demrep.wins = group_by(county.2016.vs.2012, dem.2016)
+  county.2016.demrep.wins.group = dplyr::summarise(county.2016.demrep.wins,
+                                                   turnout.perc.2016 = mean(turnout.perc.allage.est),
+                                                   turnout.perc.2012 = mean(turnout.2012.perc)
+  )
+
+  county.2016.machines.mostlydem = group_by(county.2016.vs.2012, Method_2016.1paperonly.2.paper.machine.combo,mostly.dem)
+  county.2016.machines.mostlydem.group = dplyr::summarise(county.2016.machines.mostlydem,
+                                                          turnout.perc.2016 = mean(turnout.perc.allage.est),
+                                                          turnout.perc.2012 = mean(turnout.2012.perc)
+  )
+
+  county.2016.machines.mostlydemwins = group_by(county.2016.vs.2012, Method_2016.1paperonly.2.paper.machine.combo,dem.wins)
+  county.2016.machines.mostlydemwins.group = dplyr::summarise(county.2016.machines.mostlydemwins,
+                                                              turnout.perc.2016 = mean(turnout.perc.allage.est),
+                                                              turnout.perc.2012 = mean(turnout.2012.perc)
+  )
+
+}
+#  Turnout by counties mostly voting dem and those with mostly voting machines 2016 and 2012
+{
+  county.2012v2016.perc.diff.2016ord = ggplot(county.2016.machines.mostlydem.group,
+                                              aes(x = mostly.dem, y = turnout.perc.2016,
+                                                  fill = mostly.dem
+                                              )) +
+    geom_bar(
+      stat = "identity",
+      aes(y = county.2016.machines.mostlydem.group$turnout.perc.2012),
+      fill = "grey",
+      alpha = 0.5
+    ) +
+    geom_bar(stat = "identity") +
+    scale_y_continuous(
+      name = "Percentage turnout in 2016 by mostly Dem voting counties and voting machines.\nGrey bars are 2012 results."
+    ) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.title = element_blank()) +
+    facet_wrap(~Method_2016.1paperonly.2.paper.machine.combo) +
+    scale_fill_manual(values = c("light blue", "lightcoral"))
+  county.2012v2016.perc.diff.2016ord
+}
+
+# Percentage turnout by the number of times that Democrats have won the county
+{
+  county.2016.machines.mostlydemwins.group = county.2016.machines.mostlydemwins.group[
+    order(as.integer(county.2016.machines.mostlydemwins.group$dem.wins)),]
+
+  county.2012v2016.turnout.demwins = ggplot(county.2016.machines.mostlydemwins.group,
+                                            aes(x = Method_2016.1paperonly.2.paper.machine.combo, y = turnout.perc.2016,
+                                                fill = factor(dem.wins)
+                                            )) +
+    geom_bar(stat = "identity") +
+    geom_text(label=round(county.2016.machines.mostlydemwins.group$turnout.perc.2016,0),
+              y = county.2016.machines.mostlydemwins.group$turnout.perc.2016/2, size = 6) +
+    scale_y_continuous(
+      name = "Percentage turnout in 2016 by no. times since 2000 Dems have won county and presence of voting machines.") +
+    theme(axis.text.x = element_text(angle = 0, hjust = 0.5, size = 12),
+          axis.title.x = element_blank()) +
+    facet_wrap(~dem.wins) +
+    scale_fill_brewer(type = "seq",guide = guide_legend(title = "Dem. wins since 2000"))
+  county.2012v2016.turnout.demwins
+}
+
+# Ordering by turnout percentage, percentage difference in votes
+{
+  county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$turnout.perc.allage.est), ]
+  county.2016.vs.2012$ordered.county.2016.turnout = c(1:length(county.2016.vs.2012$turnout.perc.allage.est))
+
+  county.2012v2016.perc.diff.2016ord = ggplot(county.2016.vs.2012,
+                                              aes(x = ordered.county.2016.turnout, y = perc.diff,
+                                                  fill = Method_2016.1paperonly.2.paper.machine.combo)) +
+    geom_bar(stat = "identity") +
+    geom_bar(
+      stat = "identity",
+      aes(y = county.2016.vs.2012$turnout.perc.allage.est - mean(county.2016.vs.2012$turnout.perc.allage.est)),
+      fill = "grey",
+      alpha = 0.5, width = 0.4
+    ) +
+    annotate(
+      "text",
+      x = mean(county.2016.vs.2012$ordered.county.2016.turnout),
+      y = min(county.2016.vs.2012$perc.diff),
+      label = "More votes for Democrats",
+      vjust = 1,
+      hjust = 0.5
+    ) +
+    annotate(
+      "text",
+      x = mean(county.2016.vs.2012$ordered.county.2016.turnout),
+      y = max(county.2016.vs.2012$perc.diff),
+      label = "More votes for Republicans",
+      vjust = 1,
+      hjust = 0.5
+    ) +
+    scale_y_continuous(
+      name = "Percentage vote difference in 2016 by county. Grey bars represent turnout - average county turnout,\nColours represent counties with mostly voting machines - negative values: Democrat win, positive: Republican win"
+    ) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.title = element_blank()) +
+    scale_x_discrete(
+      limit =  county.2016.vs.2012$ordered.county.2016.turnout,
+      labels = as.character(county.2016.vs.2012$county),
+      name = NULL
+    ) +
+    # facet_wrap(~dem.wins)+
+    # scale_fill_brewer(type = "seq")
+    scale_fill_manual(values = c("light blue","lightcoral"))
+  county.2012v2016.perc.diff.2016ord
+
+}
+
+# Comparisons 2000 to 2016
+{
+  ### Turnout percentage by machines and mostly dem
+  historical.turnout.perc.graph = ggplot(counties.2000.2016.2000ppl,
+                                         aes(x = year, y = turnout.perc, colour = Method_2016.1paperonly.2.paper.machine.combo,
+                                             group = Method_2016.1paperonly.2.paper.machine.combo)) +
+    geom_jitter(alpha = 0.6, width = 0.2) +
+    geom_smooth(size = 2) +
+    scale_y_continuous(name = "Turnout vote by use of voting machines in county (%) by the winner of most elections since 2000") +
+    theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.title = element_blank()) +
+    scale_x_continuous(breaks = c(seq(2000,2016,4))) +
+    scale_colour_manual(values = c("light blue","lightcoral"))  +
+    facet_wrap(~mostly.dem)
+  historical.turnout.perc.graph
+
+  ## By Dem 2016 winner
+  historical.turnout.perc.graph = ggplot(counties.2000.2016.2000ppl,
+                                         aes(x = year, y = turnout.perc, colour = Method_2016.1paperonly.2.paper.machine.combo,
+                                             group = Method_2016.1paperonly.2.paper.machine.combo)) +
+    geom_jitter(alpha = 0.6, width = 0.2) +
+    geom_smooth(size = 2) +
+    scale_y_continuous(name = "Turnout vote by use of voting machines in county (%) by the winner of the 2016 election") +
+    theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.title = element_blank()) +
+    scale_x_continuous(breaks = c(seq(2000,2016,4))) +
+    scale_colour_manual(values = c("light blue","lightcoral"))  +
+    facet_wrap(~dem.2016)
+  historical.turnout.perc.graph
+
+  ## By Dem wins since 2000. Not enough data here to make it useful
+  historical.turnout.perc.graph = ggplot(counties.2000.2016.2000ppl,
+                                         aes(x = year, y = turnout.perc, colour = Method_2016.1paperonly.2.paper.machine.combo,
+                                             group = Method_2016.1paperonly.2.paper.machine.combo)) +
+    geom_jitter(alpha = 0.6, width = 0.2) +
+    geom_smooth(size = 2) +
+    scale_y_continuous(name = "Turnout vote by by number of Democrat wins in county since 2000\n
+                       and use of voting machines in county (%)") +
+    theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.title = element_blank()) +
+    scale_x_continuous(breaks = c(seq(2000,2016,4))) +
+    scale_colour_brewer(type = "seq")  +
+    facet_wrap(~dem.wins)
+  historical.turnout.perc.graph
+
+
+  # Turnout change with time by mostly dem and voting machines
+  historical.turnout.perc.change.graph = ggplot(counties.2000.2016.2000ppl,
+                                                aes(x = year, y = turnout.change, colour = Method_2016.1paperonly.2.paper.machine.combo,
+                                                    group = Method_2016.1paperonly.2.paper.machine.combo)) +
+    geom_jitter(alpha = 0.6, width = 0.2) +
+    geom_smooth() +
+    scale_y_continuous(name = "Change in Turnout vote from previous election by county (%)") +
+    theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.title = element_blank()) +
+    scale_x_continuous(breaks = c(seq(2000,2016,4))) +
+    scale_colour_manual(values = c("light blue","lightcoral"))  +
+    facet_wrap(~mostly.dem)
+  historical.turnout.perc.change.graph
+
 }
 
