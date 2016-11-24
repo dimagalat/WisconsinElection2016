@@ -980,6 +980,7 @@ all_polls_2016 = read.csv("all_polls_2016.csv")
 selected_polls_2012.sub = read.csv("selected_polls_2012.sub.csv")
 selected_polls_2016.sub = read.csv("selected_polls_2016.sub.csv")
 demographics = read.csv("voterdemographics.csv", stringsAsFactors = F)
+model.df = read.csv("modeldf.csv")
 colnames(demographics)[1] = "county"
 demographics$medianhouseholdincome_2009.2013 = as.numeric(demographics$medianhouseholdincome_2009.2013)
 demographics$pop_sq_mile_2010 = as.numeric(demographics$pop_sq_mile_2010)
@@ -1828,7 +1829,8 @@ county.summary.2016.final$log.pop.sq.mile.2010 = log(county.summary.2016.final$p
 model.df = with(county.summary.2016.final, data.frame(county,dem.change,rep.change,oth.change,turnout.change,
                                                         Method_2016.1paperonly.2.paper.machine.combo , use.machines.prop ,
                                                         ratio_white_nonwhite , ratio_nocollege_college , pop_sq_mile_2010 ,
-                                                        medianhouseholdincome_2009.2013, turnout,total.voting.age))
+                                                        medianhouseholdincome_2009.2013, turnout,total.voting.age, dem.wins,
+                                                        dem.2016))
 colnames(model.df)[6] = "papernopaper"
 colnames(model.df)[7] = "scan.machines.prop"
 # write.csv(model.df,"modeldf.csv")
@@ -1836,7 +1838,7 @@ model.df = read.csv("modeldf.csv")
 
 dem.vote.lm = lm(dem.change ~ papernopaper + scan.machines.prop +
                        ratio_white_nonwhite + ratio_nocollege_college + pop_sq_mile_2010+
-                   medianhouseholdincome_2009.2013,
+                   medianhouseholdincome_2009.2013 + dem.change,
                      data = model.df, weights = turnout)
 summary(dem.vote.lm)
 rep.vote.lm = lm(rep.change ~ papernopaper + scan.machines.prop +
@@ -1847,14 +1849,21 @@ summary(rep.vote.lm)
 
 turnout.vote.lm = lm(turnout.change ~ papernopaper + scan.machines.prop +
                    ratio_white_nonwhite + ratio_nocollege_college + pop_sq_mile_2010 +
-                     medianhouseholdincome_2009.2013,
+                     medianhouseholdincome_2009.2013 + dem.change,
                  data = model.df , weights = turnout)
 summary(turnout.vote.lm)
 
 other.vote.lm = lm(oth.change ~ papernopaper + scan.machines.prop +
                        ratio_white_nonwhite + ratio_nocollege_college + pop_sq_mile_2010 +
-                     medianhouseholdincome_2009.2013, weights= turnout,
+                     medianhouseholdincome_2009.2013 + dem.change, weights= turnout,
                      data = model.df)
+summary(other.vote.lm)
+AIC(other.vote.lm)
+
+other.vote.lm = lm(oth.change ~ papernopaper + scan.machines.prop +
+                     ratio_white_nonwhite + ratio_nocollege_college + pop_sq_mile_2010 +
+                     medianhouseholdincome_2009.2013, weights= turnout,
+                   data = model.df)
 summary(other.vote.lm)
 AIC(other.vote.lm)
 

@@ -144,6 +144,7 @@ counties.2000.2016.2000ppl$medturnout = with(counties.2000.2016.2000ppl, ifelse(
 # Summary
 * I analysed Wisconsin polling data, historical state level voting data to 1948, and county level data from 2000 to 2016 to see if there was evidence of unusual activity in the 2016 Wisconsin Presidential election.
 * When modelling the change in vote for 'Other' candidates from 2012 to 2016 against other relevant voting and demographic variables, the proportion of wards/municipalities in each county using optical or digital scanning hardware comes out as strongly significant.
+* However, this influence appears to occur in counties regardless of previous voting record for Republican or Democrat.
 * The state-level election results, and difference from polling did not deviate significantly from historical trends.
 * No single county stood out as an outlier when considering voting patterns in the 2016 and 2012 Presidential elections.
 
@@ -273,7 +274,7 @@ historical.election.data.dem.votes = ggplot(elections.100.years.postwar,
            aes(y = oth.vote.perc)
            ) +
   scale_y_continuous(
-    name = "Bars: election votes (%). Line: turnout (%)") +
+    name = "Bars: coloured are election votes for Democrats,\n grey are for 'Other' candidates (%). Line: turnout (%)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_x_continuous(breaks = seq(1948,2016,4)) +
   scale_fill_manual(values = c("light blue", "lightcoral"))
@@ -375,7 +376,7 @@ county.perc.winner
 
 This above figure shows us that 1. With a few exceptions*, there was a broad spread of votes for Clinton across counties in Wisconsin, 2. there were a lot less counties won by Clinton than Trump, and 3. the party that won a county did not seem to be linked to the percentage turnout. We can confirm this with a scatter graph. The following shows that the Clinton vote did not drop with turnout percentage in each county.
 
-**(for example Milwaukee and Dane, which are historically Democrat-leaning, urban counties.)*
+**(for example Milwaukee and Dane, which are historically Democrat-leaning, urban counties.)**
 
 ```{r clinton v turnout, echo=F, fig.cap="*Percentage vote for Clinton in Wisconsin counties against turnout percentage in the county.*"}
 county.perc.turnout.dems = ggplot(
@@ -425,7 +426,7 @@ county.perc.winner.other = ggplot(
   ) +
   geom_bar(stat = "identity", alpha = 0.6) +
   scale_y_continuous(name =
-                       paste("Percentage vote for 'Other' in Wisconsin counties.\nGrey bar behind indicates change in turnout from 2012 (%)")) +
+                       paste("Coloured bars: vote for 'Other' candidates (%)\nGrey bar: change in turnout from 2012 (%)")) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 7)) +
   scale_x_discrete(
     limit =  county.2016.vs.2012$ordered.county.2016.oth.votes.perc,
@@ -439,7 +440,7 @@ county.perc.winner.other
 ## There was a large swing from Democrat to Republican in many counties
 The following figure shows that in many counties, the vote swung significantly from Democrat to Republican compared to the 2012 election (often a 20 - 30% swing). However, there is no single county that stands out as an outlier in terms of an unusual switch from Democrat to Republican between 2012 and 2016.
 
-```{r swing 2012, echo = F, fig.cap="*Percentage vote difference in 2012 and 2016 by county.Grey bars are 2012 results, red bars are overlaid 2016 results. Negative = Democrat win, positive = Republican win*", fig.height=6, fig.width=10}
+```{r swing 2012, echo = F, fig.cap="*Percentage vote difference in 2012 and 2016 by county.Grey bars are 2012 results, red bars are overlaid 2016 results. Negative = Democrat win, positive = Republican win*", fig.height=6, fig.width=12}
 
 # Visualising county data 2012 vs 2016
   county.2016.vs.2012 = county.2016.vs.2012[order(county.2016.vs.2012$diff.2012.perc), ]
@@ -457,7 +458,7 @@ county.2012v2016.perc.diff.2016ord = ggplot(county.2016.vs.2012,
     "text",
     x = county.2016.vs.2012$ordered.county.2012.perc.diff[county.2016.vs.2012$county == "Marquette"],
     y = quantile(county.2016.vs.2012$diff.2012.perc)[1],
-    label = "Vote swing towards Democrats",
+    label = "Vote difference favours Democrats",
     vjust = 1,
     hjust = 0.5
   ) +
@@ -465,12 +466,12 @@ county.2012v2016.perc.diff.2016ord = ggplot(county.2016.vs.2012,
     "text",
     x = county.2016.vs.2012$ordered.county.2012.perc.diff[county.2016.vs.2012$county == "Marquette"],
     y = max(county.2016.vs.2012$diff.2012.perc) + 10,
-    label = "Vote swing towards Republicans",
+    label = "Vote difference favours Republicans",
     vjust = 1,
     hjust = 0.5
   ) +
   scale_y_continuous(
-    name = "Vote difference in 2012 and 2016 by county (%),\nNegative = Democrat, positive = Republican ") +
+    name = "Vote difference between Democrate and Republicans in 2012 and 2016 by county (%);\ngrey: 2012, translucent red: 2016. Negative = Democrat, positive = Republican ") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 7)) +
   scale_x_discrete(
     limit =  county.2016.vs.2012$ordered.county.2012.perc.diff,
@@ -485,7 +486,7 @@ county.2012v2016.perc.diff.2016ord
 ```
 Although there was a significant swing from Democrat to Republican in many counties, in such a close election race, only small amounts of manipulation would be necessary to swing a few thousand votes here and there to change the result. Ideally, to investigate this further, I would go down to the next voting level to check for outliers or other unusual trends (the level of ward/municipality). However, this information being lacking, I can instead stay at the county level, and look at whether the presence of electronic optical scanner presence was at all linked to the voting outcome.
 
-## It is not possible to confirm that Optical/digital scan machine presence is linked to voting patterns
+## Optical/digital scan machine presence is correlated with turnout (among other things)
 One interesting dataset provided by the Wisconsin Election Commission is the presence of Optical/Digital Scan Tabulator (from now on called optical scanner presence) on a ward-by-ward basis. I made the assumption that any manipulation of the election results would be more likely to occur in wards / counties that have a higher proportion of Optical/Digital Scan Tabulators. I have incorporated this information into the data.
 
 ```{r machines by county, echo = F, fig.cap="*Presence of optical scanner presence by county, with primary machine vendor / supplier*"}
@@ -523,6 +524,8 @@ I have summarised the analysis of these interactions in a correlation matrix bel
 corr.table = with(county.summary.2016.final.2000ppl, data.frame(dem.change, rep.change,
                                                   oth.change,swing.turnout.perc,turnout,
                                                   use.machines.prop,dem.wins))
+colnames(corr.table) = c("Change in Dem vote","Change in Rep vote","Change in Other vote","Change in turnout","Absolute turnout",
+                         "Prop. wards using scanning machines","No. of Dem wins since 2000")
 correlationmatrix = cor(corr.table, use = "pairwise.complete.obs")
 corrplot.all = corrplot(correlationmatrix, method = "number", type = "upper")
 # corrplot.all
@@ -543,6 +546,8 @@ The voter turnout variable contains a couple of large outliers (Milwaukee and Da
 corr.table.log = with(county.summary.2016.final.2000ppl, data.frame(dem.change, rep.change,
                                                   oth.change,swing.turnout.perc,log(turnout),
                                                   use.machines.prop,dem.wins))
+colnames(corr.table.log) = c("Change in Dem vote","Change in Rep vote","Change in Other vote","Change in turnout","Absolute turnout (logged)",
+                         "Prop. wards using scanning machines","No. of Dem wins since 2000")
 correlationmatrix.log = cor(corr.table.log, use = "pairwise.complete.obs")
 corrplot.all.log = corrplot(correlationmatrix.log, method = "number", type = "upper")
 ```
@@ -557,7 +562,7 @@ Now we can see that the change in vote for other between 2012 and 2016 is highly
     geom_smooth(alpha = 0.5, colour = "grey", method = "lm", se = F) +
     geom_point(stat = "identity") +
     scale_y_continuous(
-      name = "Change in vote\nfor other 2012 - 2016 (%)"
+      name = "Change in vote\nfor 'Other' 2012 - 2016 (%)"
     ) +
     scale_x_continuous(
       name = "Turnout numbers in 2016"
@@ -580,7 +585,7 @@ Now we can see that the change in vote for other between 2012 and 2016 is highly
     geom_smooth(alpha = 0.5, colour = "grey", method = "lm", se = F) +
     geom_point(stat = "identity") +
     scale_y_continuous(
-      name = "Change in vote\nfor other 2012 - 2016 (%)"
+      name = "Change in vote\nfor 'Other' 2012 - 2016 (%)"
     ) +
     scale_x_continuous(
       name = "Log of turnout 2012 - 2016"
@@ -613,27 +618,28 @@ Since I wrote my original post I have been able to get hold of a bunch of demogr
 I roughly followed [Nate Cohn's model design](https://twitter.com/Nate_Cohn/status/801226924156719104), which accounts for the varying effect of turnout by weighting the linear model by the turnout in each county, and applied it to the change (%) in Democrat, Republican, turnout, and Other vote. The most interesting output for the other vote is below.
 
 ```{r linear model}
+model.df = read.csv("modeldf.csv")
 other.vote.lm = lm(oth.change ~ papernopaper + scan.machines.prop +
                        ratio_white_nonwhite + ratio_nocollege_college + pop_sq_mile_2010 +
-                     medianhouseholdincome_2009.2013,
-                     data = model.df , weights = turnout)
+                     medianhouseholdincome_2009.2013, weights= turnout,
+                     data = model.df)
+AIC(other.vote.lm)
 summary(other.vote.lm)
 
 ```
 
-What we can see here is that when you account for the differing turnout in each county, as well as a number of demgraphic factors, the proportion of optical or digital scan tabulators in the county seems to have an influence on the 'other' vote. With increasing proportion of wards using optical or digital scanning hardware in a county, the greater the change in vote for 'Other' candidates from 2012. Other demographic factors of course have a strong effect, such as ethnicity, education, and population density. But despite them all, scanning hardware has a strong effect... 
+What we can see here is that when you account for the differing turnout in each county, as well as a number of demgraphic factors, the proportion of optical or digital scan tabulators in the county seems to have an influence on the 'other' vote. With increasing proportion of wards using optical or digital scanning hardware in a county, the greater the change in vote for 'Other' candidates from 2012. Other demographic factors of course have a strong effect, such as ethnicity, education, and population density. But despite them all, scanning hardware has a strong effect.
 
-I would like it if someone could explain these results to me! Maybe I am missing something? I have checked the model diagnostics, and I think they are good...
+*Could someone could explain these results to me! Maybe I am missing something? I have checked the model diagnostics, and I think they are good... Maybe I am missing or misusing a key Demographic variable?*
 
+What is also interesting here is that the influence of the scanning machine does not seem to have an effect regardless of who won the county in 2016. 
 Although these results are interesting, like I already mentioned what we really need is municipality or ward-level data to confirm this with confidence. Until this data is available, we cannot assume with 100% confidence that the scanning hardware and vote for 'other' is linked. While we wait, below I highlight a few interesting graphs of the 'other' vote that may be worth looking into in greater depth later, if more data becomes available.
 
 ## County results 2000 - 2016: the rise of the vote for 'Other' candidates
 
-I did not see a clear link between the presence of optical scanner presence and party vote at the county level in 2016. However, I did see a *potential' link between the other vote and the presence of optical scanner presence. I still think it is worth investigating 'Other' candidate voting trends from 2000 - 2016 and the link to optical scanner presence, in case there are unusual divergences. When/if more 2016 voting data becomes available, I can investigate this further.
+I saw a link between the presence of optical scanner presence and vote for 'Other' candidates at the county level in 2016. Can we see this trend over time? And we saw that the vote for 'Other' candidates was connected with a reducing vote for Democrats. Are the effects present in mostly Republican or Democrat voting counties? The following figures show the change in votes for 'Other' candidates with time according to the use of machines or the by the previous voting record of the county (Democrat or Repulican).
 
-The following figures show the change in votes for 'Other' candidates with time according to the use of machines or the by the previous voting record of the county (Democrat or Repulican). It is quite clear that in 2016, the 'Other' vote was particularly high compared to previous elections.
-
-The vote percentage for 'other' candidates was generally higher in 2016 than in earlier elections, and was even higher for counties that use optical scanner presence. However, the difference was similar whether the county has mostly voted Democrat or Republican since 2000. This suggest that broadly, Democrat-leaning counties with optical scanner presence did not have a different vote for 'other' candidates compared to Republican-leaning counties.
+The vote percentage for 'other' candidates was generally higher in 2016 than in earlier elections, and was even higher for counties that use optical scanner presence. However, the difference was similar whether the county has mostly voted Democrat or Republican since 2000. This suggest that broadly, Democrat-leaning counties with optical scanner presence did not have a different vote for 'other' candidates compared to Republican-leaning counties. This is interesting, as it suggests that the presence of scanning hardware increased the 'other' vote in counties regardless of political leanings.
 
 ```{r correlationgraph machines other vote, echo=F, fig.cap="*Other vote by use of optical scanner presence in county (%) and the counties that have chosen mostly Democrat or Republican since 2000. Points are individual county results lines are a mean of the counties in each category.*", fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
 historical.oth.vote.perc.graph = ggplot(counties.2000.2016.2000ppl,
@@ -696,7 +702,7 @@ In general, the Wisconsin 2016 elections fell within historical ranges in terms 
 
 I checked the results of the Wisconsin election at the county level. Using a linear model, I found that the change in the vote for 'Other' candidates between 2012 and 2016 increased with the increasing presence of optical or digital scanning hardware in a county. Despite this significant finding, it is not possible to be confident of the influence optical scanner presence on county level voting in Wisconsin in 2016 with the data available. To fully investigate a potential influence of optical scanner presence further, we need the voting data at the level of voting ward / municipality. This is especially important in counties with high populations, e.g. Milwaukee, where small changes in turnout and vote preference in 2016 could have significantly affected the result.
 
-**Click [here](https://sean-case.github.io/wisconsinvotes/index.html) to go back to the blog home page.**
+**Click [here](https://sean-case.github.io) to go back to the blog home page.**
 
 # Update 23-11-16: Influence of optical scanner presence on turnout
 Following [this article](http://nymag.com/daily/intelligencer/2016/11/activists-urge-hillary-clinton-to-challenge-election-results.html), suggesting that 2016 voter turnout was affected by the presence of optical scanner presence, I have updated by analysis.
@@ -760,20 +766,16 @@ So we can see from the publicly-available data that in the 2016 election, mostly
 This data seems interesting, but is it significant? Using the same modelling method as previously I used for the 'Other' vote, I analysed the change in turnout.
 
 ```{r model turnout}
+model.df = read.csv("modeldf.csv")
 turnout.vote.lm = lm(turnout.change ~ papernopaper + scan.machines.prop +
                    ratio_white_nonwhite + ratio_nocollege_college + pop_sq_mile_2010 +
-                     medianhouseholdincome_2009.2013,
+                     medianhouseholdincome_2009.2013 + dem.change,
                  data = model.df , weights = turnout)
 summary(turnout.vote.lm)
 
 ```
-It is quite clear from the model that the use of 'paper or no paper' voting and the presence of scanner machines does not have an effect on turnout.
+It is quite clear from the model that the use of 'paper or no paper' voting and the presence of scanner machines does not have an effect on turnout. However, a reduced vote for Democrat seems to be linked to the turnout - indicating that those people who didn't turn up were more likely to have voted Democrat.
 
 In the time since I wrote this update, the computer scientist (J. Alex Halderman) who was quoted in the NYmag article has himself [written an article on Medium](https://medium.com/@jhalderm/want-to-know-if-the-election-was-hacked-look-at-the-ballots-c61a6113b0ba#.1rtjub32g) to say that in fact, the quote was not correct. So perhaps, this 'finding' was in fact not a finding at all.
 
-
-
-
-
-
-
+**Click [here](https://sean-case.github.io) to go back to the blog home page.**
