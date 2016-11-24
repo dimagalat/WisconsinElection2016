@@ -930,8 +930,8 @@ vot.equip.county$county = test
 machine.join = data.frame(vot.equip.county$county, vot.equip.county$use.machines.prop, vot.equip.county$machine.most.used)
 colnames(machine.join) = c("county","use.machines.prop","machine.most.used")
 
-machine.join$all.machines = with(machine.join, ifelse(use.machines.prop > 0.75, "Mostly voting machines",
-                                                      "Some or no voting machines"))
+machine.join$all.machines = with(machine.join, ifelse(use.machines.prop > 0.75, "Mostly optical scanners",
+                                                      "Some or no optical scanners"))
 
 machine.join$county = as.character(machine.join$county)
 machine.join$county[machine.join$county == "Fond Du Lac"] = "Fond du Lac"
@@ -1821,36 +1821,77 @@ correlationmatrix = cor(corr.table, use = "pairwise.complete.obs")
 corrplot.all = corrplot(correlationmatrix, method = "number", type = "upper")
 
 require(nlme)
-other.vote.lm = lm(log(oth.vote) ~ swing.turnout.perc +log(turnout) + use.machines.prop + dem.wins,data = county.summary.2016.final.2000ppl)
+# Following Nate Silver's method: https://twitter.com/Nate_Cohn/status/801226924156719104/photo/1?ref_src=twsrc%5Etfw
+# I found it's better to use the non-logged version of pop.sq.mile.2010
+county.summary.2016.final$log.pop.sq.mile.2010 = log(county.summary.2016.final$pop_sq_mile_2010)
+
+model.df = with(county.summary.2016.final, data.frame(county,dem.change,rep.change,oth.change,turnout.change,
+                                                        Method_2016.1paperonly.2.paper.machine.combo , use.machines.prop ,
+                                                        ratio_white_nonwhite , ratio_nocollege_college , pop_sq_mile_2010 ,
+                                                        medianhouseholdincome_2009.2013, turnout,total.voting.age))
+colnames(model.df)[6] = "papernopaper"
+colnames(model.df)[7] = "scan.machines.prop"
+# write.csv(model.df,"modeldf.csv")
+model.df = read.csv("modeldf.csv")
+
+dem.vote.lm = lm(dem.change ~ papernopaper + scan.machines.prop +
+                       ratio_white_nonwhite + ratio_nocollege_college + pop_sq_mile_2010+
+                   medianhouseholdincome_2009.2013,
+                     data = model.df, weights = turnout)
+summary(dem.vote.lm)
+rep.vote.lm = lm(rep.change ~ papernopaper + scan.machines.prop +
+                   ratio_white_nonwhite + ratio_nocollege_college + pop_sq_mile_2010+
+                   medianhouseholdincome_2009.2013,
+                 data = model.df , weights = turnout)
+summary(rep.vote.lm)
+
+turnout.vote.lm = lm(turnout.change ~ papernopaper + scan.machines.prop +
+                   ratio_white_nonwhite + ratio_nocollege_college + pop_sq_mile_2010 +
+                     medianhouseholdincome_2009.2013,
+                 data = model.df , weights = turnout)
+summary(turnout.vote.lm)
+
+other.vote.lm = lm(oth.change ~ papernopaper + scan.machines.prop +
+                       ratio_white_nonwhite + ratio_nocollege_college + pop_sq_mile_2010 +
+                     medianhouseholdincome_2009.2013, weights= turnout,
+                     data = model.df)
 summary(other.vote.lm)
+AIC(other.vote.lm)
 
-other.vote.perc.lm = lm(oth.vote.perc ~ swing.turnout.perc + log(turnout) + use.machines.prop + dem.wins,data = county.summary.2016.final.2000ppl)
-summary(other.vote.perc.lm)
+plot(other.vote.lm)
 
-other.vote.perc.change.lm = lm(oth.change ~ swing.turnout.perc + log(turnout*use.machines.prop) + dem.wins,data = county.summary.2016.final.2000ppl)
-summary(other.vote.perc.change.lm)
-AIC(other.vote.perc.change.lm)
-####
+#### Checking 'other vote' model, as scan machines prop was the most significant here
 {
 #Next, comparing residuals against each factor individually
-layout.show(layout(matrix(c(1,2,3,4),2,2)))
+layout.show(layout(matrix(c(1,2,3,4,5,6),3,2)))
 
-A <- data.frame(rstandard(other.vote.perc.change.lm),
-                other.vote.perc.change.lm$model$swing.turnout.perc,other.vote.perc.change.lm$model$turnout,
-                other.vote.perc.change.lm$model$use.machines.prop,
-                other.vote.perc.change.lm$model$dem.wins
+A <- data.frame(rstandard(other.vote.lm),
+                other.vote.lm$model$Method_2016.1paperonly.2.paper.machine.combo,
+                other.vote.lm$model$scan.machines.prop,
+                other.vote.lm$model$ratio_white_nonwhite,
+                other.vote.lm$model$ratio_nocollege_college,
+                other.vote.lm$model$pop_sq_mile_2010,
+                other.vote.lm$model$medianhouseholdincome_2009.2013
                 )
-colnames(A) <- c("resid", "swing.turnout.perc","turnout","use.machines.prop","dem.wins")
-plot(A$resid ~ A$swing.turnout.perc, xlab = "swing.turnout.perc",
+colnames(A) <- c("resid",  "papernopaper","scan.machines.prop","ratio_white_nonwhite","ratio_nocollege_college",
+                 "pop_sq_mile_2010", "medianhouseholdincome_2009.2013" )
+
+plot(A$resid ~ A$papernopaper, xlab = "papernopaper",
      ylab = "Residuals"); abline(0,0)
 
-plot(A$resid ~ A$use.machines.prop, xlab = "turnout",
+plot(A$resid ~ A$scan.machines.prop, xlab = "scan.machines.prop",
      ylab = "Residuals"); abline(0,0)
 
-plot(A$resid ~ A$use.machines.prop, xlab = "use.machines.prop",
+plot(A$resid ~ A$ratio_white_nonwhite, xlab = "ratio_white_nonwhite",
      ylab = "Residuals"); abline(0,0)
 
-plot(A$resid ~ A$use.machines.prop, xlab = "dem.wins",
+plot(A$resid ~ A$ratio_nocollege_college, xlab = "ratio_nocollege_college",
+     ylab = "Residuals"); abline(0,0)
+
+plot(A$resid ~ A$pop_sq_mile_2010, xlab = "pop_sq_mile_2010",
+     ylab = "Residuals"); abline(0,0)
+
+plot(A$resid ~ A$medianhouseholdincome_2009.2013, xlab = "medianhouseholdincome_2009.2013",
      ylab = "Residuals"); abline(0,0)
 
 e2nona = A$resid[!is.na(A$resid)]
@@ -1869,7 +1910,7 @@ ks.test(e2nona,rnorm)
 }
 ####
 
-other.vote.perc.change.lm.log = lm(oth.change ~ swing.turnout.perc + log(turnout) + use.machines.prop + dem.wins,data = county.summary.2016.final.2000ppl)
+other.vote.perc.change.lm.log = lm(oth.change ~ swing.turnout.perc + log(turnout) + scan.machines.prop + dem.wins,data = county.summary.2016.final.2000ppl)
 summary(other.vote.perc.change.lm.log)
 AIC(other.vote.perc.change.lm.log)
 plot(other.vote.perc.change.lm.log)
@@ -1880,21 +1921,21 @@ layout.show(layout(matrix(c(1,2,3,4),2,2)))
 
 A <- data.frame(rstandard(other.vote.perc.change.lm.log),
                 other.vote.perc.change.lm.log$model$swing.turnout.perc,other.vote.perc.change.lm.log$model$"log(turnout)",
-                other.vote.perc.change.lm.log$model$use.machines.prop,
+                other.vote.perc.change.lm.log$model$scan.machines.prop,
                 other.vote.perc.change.lm.log$model$dem.wins
 )
 
-colnames(A) <- c("resid", "swing.turnout.perc","turnout","use.machines.prop","dem.wins")
+colnames(A) <- c("resid", "swing.turnout.perc","turnout","scan.machines.prop","dem.wins")
 plot(A$resid ~ A$swing.turnout.perc, xlab = "swing.turnout.perc",
      ylab = "Residuals"); abline(0,0)
 
-plot(A$resid ~ A$use.machines.prop, xlab = "turnout",
+plot(A$resid ~ A$scan.machines.prop, xlab = "turnout",
      ylab = "Residuals"); abline(0,0)
 
-plot(A$resid ~ A$use.machines.prop, xlab = "use.machines.prop",
+plot(A$resid ~ A$scan.machines.prop, xlab = "scan.machines.prop",
      ylab = "Residuals"); abline(0,0)
 
-plot(A$resid ~ A$use.machines.prop, xlab = "dem.wins",
+plot(A$resid ~ A$scan.machines.prop, xlab = "dem.wins",
      ylab = "Residuals"); abline(0,0)
 
 e2nona = A$resid[!is.na(A$resid)]
